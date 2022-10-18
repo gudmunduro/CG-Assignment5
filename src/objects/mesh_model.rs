@@ -60,7 +60,7 @@ impl<'a> MeshModel<'a> {
 
     pub fn draw(&self, shader: &Shader3D) {
         for (mesh_id, mesh_material) in &self.mesh_materials {
-            let material = self.materials[mesh_material];
+            let material = &self.materials[mesh_material];
             shader.set_material_diffuse(&material.diffuse);
             shader.set_material_specular(&material.specular);
             shader.set_material_ambient(AMBIENT_FACTOR);

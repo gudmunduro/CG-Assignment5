@@ -1,7 +1,9 @@
+use std::time::Instant;
+
 use crate::{core::{
     matrices::{ModelMatrix, ProjectionMatrix, ViewMatrix},
     shader::Shader3D,
-}, objects::cube::Cube};
+}, objects::cube::Cube, game_objects::blender_test::BTest};
 use glow::*;
 use nalgebra::Vector3;
 use sdl2::{
@@ -9,7 +11,7 @@ use sdl2::{
     EventPump, event::Event, keyboard::Keycode,
 };
 
-use super::{constants::{W_WIDTH, W_HEIGHT}, color::Color};
+use super::{constants::{W_WIDTH, W_HEIGHT}, color::Color, game_object::GameObject};
 
 enum ArrowDir {
     Up,
@@ -24,14 +26,17 @@ pub struct Game<'a> {
     window: &'a Window,
     events_loop: &'a mut EventPump,
     gl_context: &'a GLContext,
-    shader: &'a Shader3D<'a>,
+    pub shader: &'a Shader3D<'a>,
     model_matrix: &'a mut ModelMatrix,
     view_matrix: &'a mut ViewMatrix,
     projection_matrix: &'a mut ProjectionMatrix,
     cube: &'a Cube<'a>,
     moving_foward: bool,
     moving_backward: bool,
-    arrow_direction: ArrowDir
+    arrow_direction: ArrowDir,
+    last_time: Instant,
+    game_objects: Vec<Box<dyn GameObject<'a> + 'a>>,
+    delta_time: f32
 }
 
 impl<'a> Game<'a> {
@@ -44,12 +49,15 @@ impl<'a> Game<'a> {
         model_matrix: &'a mut ModelMatrix,
         view_matrix: &'a mut ViewMatrix,
         projection_matrix: &'a mut ProjectionMatrix,
-        cube: &'a Cube,
+        cube: &'a Cube
     ) -> Game<'a> {
         shader.use_program();
         shader.set_view_matrix(view_matrix.get_matrix().as_slice());
         projection_matrix.set_perspective(80.0, W_WIDTH as f32 / W_HEIGHT as f32, 0.5, 80.0);
         shader.set_projection_matrix(projection_matrix.get_matrix().as_slice());
+
+        let mut game_objects =  Vec::new();
+        game_objects.push(Box::new(BTest::new(gl)) as Box<dyn GameObject<'a>>);
 
         Game {
             gl,
@@ -63,26 +71,32 @@ impl<'a> Game<'a> {
             cube,
             moving_foward: false,
             moving_backward: false,
-            arrow_direction: ArrowDir::None
+            arrow_direction: ArrowDir::None,
+            last_time: Instant::now(),
+            delta_time: 0.0,
+            game_objects: game_objects
         }
     }
 
     pub fn update(&mut self) {
+        self.delta_time = (Instant::now() - self.last_time).as_secs_f32();
+        self.last_time = Instant::now();
+
         if self.moving_foward {
-            self.view_matrix.slide(0.0, 0.0, -1.0, Vector3::zeros(), Vector3::zeros(), self.view_matrix.n);
+            self.view_matrix.slide(0.0, 0.0, -self.delta_time * 10.0, Vector3::zeros(), Vector3::zeros(), self.view_matrix.n);
         }
 
         if self.moving_backward {
-            self.view_matrix.slide(0.0, 0.0, 1.0, Vector3::zeros(), Vector3::zeros(), self.view_matrix.n);
-        }
+            self.view_matrix.slide(0.0, 0.0, self.delta_time  * 10.0, Vector3::zeros(), Vector3::zeros(), self.view_matrix.n);
+        }        
 
-        let rot_speed = 1.0;
+        let rot_speed = 150.0;
         use ArrowDir::*;
         match self.arrow_direction {
-            Up => self.view_matrix.pitch(rot_speed),
-            Down => self.view_matrix.pitch(-rot_speed),
-            Left => self.view_matrix.yaw(rot_speed),
-            Right => self.view_matrix.yaw(-rot_speed),
+            Up => self.view_matrix.pitch(rot_speed * self.delta_time),
+            Down => self.view_matrix.pitch(-rot_speed * self.delta_time),
+            Left => self.view_matrix.yaw(rot_speed * self.delta_time),
+            Right => self.view_matrix.yaw(-rot_speed * self.delta_time),
             None => ()
         }
     }
@@ -100,25 +114,25 @@ impl<'a> Game<'a> {
 
         self.model_matrix.load_identity();
 
-        self.shader.set_light_position(&[0.0, 0.0, 0.0, 1.0]);
+        self.shader.set_light_position(&[0.0, 0.0, 8.0, 1.0]);
         self.shader.set_light_diffuse(&[0.5, 0.5, 0.5, 0.0]);
         self.shader.set_light_ambient(&[0.5, 0.5, 0.5, 0.0]);
         self.shader.set_light_specular(&[1.0, 1.0, 1.0, 0.0]);
         self.shader.set_eye_position(self.view_matrix.eye.x, self.view_matrix.eye.y, self.view_matrix.eye.z);
-
-        self.shader.set_material_ambient(0.5);
-        self.shader.set_material_diffuse(&Color::new(0.0, 0.18, 0.02));
-        self.shader.set_material_specular(&Color::new(1.0, 1.0, 1.0));
-        self.shader.set_shininess(3.0);
-
 
         self.model_matrix.push_stack();
         self.model_matrix.add_translate(0.0, 0.0, -8.0);
         self.model_matrix.add_scale(5.0, 5.0, 5.0);
 
         self.shader.set_model_matrix(self.model_matrix.matrix.as_slice());
-        self.cube.draw(self.shader);
+        // self.b_test.display(self, self.gl);
         self.model_matrix.pop_stack();
+
+        //self.model_matrix.push_stack();
+        // self.model_matrix.add_translate(0.0, 0.0, -8.0);
+        // self.model_matrix.add_scale(5.0, 5.0, 5.0);
+        // self.b_test.display(self, self.gl);
+        // self.model_matrix.pop_stack();
 
         self.window.gl_swap_window();
     }

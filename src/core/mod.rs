@@ -5,3 +5,4 @@ pub mod constants;
 pub mod obj_loader;
 pub mod color;
 pub mod material;
+pub mod game_object;
