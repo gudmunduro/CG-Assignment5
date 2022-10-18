@@ -30,24 +30,13 @@ fn main() {
         (gl, window, events_loop, gl_context)
     };
 
-    let shader = Shader3D::new(&gl);
-    let cube = Cube::new(&gl);
-
-    let mut model_matrix = matrices::ModelMatrix::new();
-    let mut view_matrix = matrices::ViewMatrix::new();
-    let mut projection_matrix = matrices::ProjectionMatrix::new();
-
     let mut game = game::Game::new(
         &gl,
         &window,
         &mut events_loop,
         &gl_context,
-        &shader,
-        &mut model_matrix,
-        &mut view_matrix,
-        &mut projection_matrix,
-        &cube,
     );
+    game.create_scene();
 
     game.main();
 }

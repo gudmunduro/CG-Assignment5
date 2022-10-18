@@ -99,7 +99,7 @@ pub fn load_obj_file<'a>(file_location: &str, file_name: &str, gl: &'a Context) 
     for line in lines {
         let line = match line {
             Ok(l) => l,
-            Err(e) => continue,
+            Err(_) => continue,
         };
         let tokens: Vec<&str> = line.split(" ").collect();
         if tokens.len() == 0 {

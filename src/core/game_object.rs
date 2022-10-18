@@ -1,4 +1,5 @@
 use glow::*;
+use sdl2::event::Event;
 
 use super::game::Game;
 
@@ -11,6 +12,7 @@ pub trait GameObject<'a> {
         return CollisionInfo::NoCollision;
     }
 
+    fn on_event(&mut self, game: &Game, event: &Event);
     fn update(&mut self, game: &Game, gl: &'a Context);
     fn display(&self, game: &Game, gl: &'a Context);
 }
