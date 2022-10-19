@@ -1,6 +1,6 @@
 use glow::Context;
 
-use crate::core::{game_object::GameObject, game::Game, color::Color};
+use crate::core::{game_object::{GameObject, CollisionInfo}, game::Game, color::Color};
 
 
 pub struct Ground {
@@ -14,6 +14,11 @@ impl Ground {
 }
 
 impl<'a> GameObject<'a> for Ground {
+
+    fn collision_info(&self) -> CollisionInfo {
+        CollisionInfo::YCollision(-0.2)
+    }
+
     fn on_event(&mut self, game: &Game, event: &sdl2::event::Event) {
         
     }

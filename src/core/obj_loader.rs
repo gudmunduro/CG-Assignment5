@@ -60,7 +60,7 @@ pub fn load_mtl_file(
                     mesh_model.add_material(&mtl_name.unwrap(), &mtl);
                 }
 
-                print!("Material {}", tokens[1]);
+                println!("Material {}", tokens[1]);
                 mtl = Some(Material::new(None, None, None));
                 mtl_name = Some(tokens[1].to_string());
             }

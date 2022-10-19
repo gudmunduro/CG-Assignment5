@@ -4,7 +4,8 @@ use sdl2::event::Event;
 use super::game::Game;
 
 pub enum CollisionInfo {
-    NoCollision
+    NoCollision,
+    YCollision(f32)
 }
 
 pub trait GameObject<'a> {

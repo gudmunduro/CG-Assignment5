@@ -9,7 +9,7 @@ pub struct BTest<'a> {
 
 impl<'a> BTest<'a> {
     pub fn new(gl: &'a Context) -> BTest {
-        let mesh = load_obj_file("./models", "911.obj", gl).expect("Failed to load blender model");
+        let mesh = load_obj_file("./models", "mouth.obj", gl).expect("Failed to load blender model");
 
         BTest {
             mesh_model: mesh
