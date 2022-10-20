@@ -24,9 +24,10 @@ pub struct Car<'a> {
 }
 
 impl<'a> Car<'a> {
-    pub fn new(gl: &Context) -> Car {
+    pub fn new(gl: &'a Context, game: &Game) -> Car<'a> {
         let car_model = load_obj_file("./models", "car.obj", gl).expect("Failed to load car model");
         let wheel_model = load_obj_file("./models", "wheel.obj", gl).expect("Failed to load wheel model");
+        let tex_id = game.load_texture("./models/textures/Ferrari_246_F1_Low_Car_BaseColor.png");
 
         Car { car_model, wheel_model, move_direction: MovingDirection::Stop, car_pos: Vector3::zeros(), car_velocity: Vector3::zeros(), rotation: 0.0, turning_angle: 0.0, y_velocity: 0.0 }
     }

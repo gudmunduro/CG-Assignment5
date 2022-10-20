@@ -7,10 +7,12 @@ uniform vec4 u_material_diffuse;
 uniform vec4 u_material_specular;
 uniform float u_material_ambient_factor;
 uniform float u_material_shininess;
+uniform sampler2D texture;
 
 varying vec4 s[LIGHT_COUNT];
 varying vec4 v;
 varying vec4 normal;
+varying vec2 v_uv;
 
 void main(void)
 {
@@ -23,7 +25,7 @@ void main(void)
     	float lambert = max(0.0, dot(normal, s[i]) / (length(normal) * length(s[i])));
 		float phong = max(0.0, dot(normal, h) / length(normal) * length(h));
 		vec4 ambient_color = u_light_ambient[i] * material_ambient;
-		vec4 diffuse_color = u_light_diffuse[i] * u_material_diffuse * lambert;
+		vec4 diffuse_color = u_light_diffuse[i] * u_material_diffuse * texture2D(texture, v_uv) * lambert;
 		vec4 specular_color = u_light_specular[i] * u_material_specular * pow(phong, u_material_shininess);
 		light_calculated_color += ambient_color + diffuse_color + specular_color;
 	}
