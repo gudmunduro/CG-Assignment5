@@ -12,6 +12,7 @@ uniform mat4 u_view_matrix;
 varying vec4 s[LIGHT_COUNT];
 varying vec4 v;
 varying vec4 normal;
+varying vec2 v_uv;
 
 void main(void)
 {
@@ -28,6 +29,8 @@ void main(void)
 
 	position = u_view_matrix * position;
 	position = u_projection_matrix * position;
+
+	v_uv = vec2(1, 0);
 
 	gl_Position = position;
 }
