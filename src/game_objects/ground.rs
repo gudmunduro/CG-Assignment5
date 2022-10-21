@@ -30,7 +30,7 @@ impl<'a> GameObject<'a> for Ground {
     fn display(&self, game: &Game, gl: &'a Context) {
         let mut model_matrix = game.model_matrix.borrow_mut();
 
-        game.shader.set_material_ambient(0.6);
+        game.shader.set_material_ambient(&Color::new(0.3, 0.14, 0.08));
         game.shader.set_material_diffuse(&Color::new(0.3, 0.14, 0.08));
         game.shader.set_material_specular(&Color::new(0.3, 0.14, 0.08));
         game.shader.set_shininess(3.0);

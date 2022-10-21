@@ -1,3 +1,5 @@
+use std::num::NonZeroU32;
+
 use glow::*;
 
 use crate::core::shader::Shader3D;
@@ -68,6 +70,8 @@ impl<'a> Cube<'a> {
         shader.set_normal_attribute(&self.normal_array);
         
         unsafe {
+            self.gl.bind_texture(TEXTURE_2D, Some(NativeTexture(NonZeroU32::new_unchecked(0))));
+
             self.gl.draw_arrays(TRIANGLE_FAN, 0, 4);
             self.gl.draw_arrays(TRIANGLE_FAN, 4, 4);
             self.gl.draw_arrays(TRIANGLE_FAN, 8, 4);

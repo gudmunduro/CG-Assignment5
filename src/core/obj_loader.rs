@@ -7,7 +7,9 @@ use crate::core::material::Material;
 use crate::objects::mesh_model::MeshModel;
 
 use glow::*;
-use nalgebra::Vector3;
+use nalgebra::{Vector2, Vector3};
+
+use super::game::Game;
 
 fn calculate_normals(positions: &Vec<Vector3<f32>>) -> Vec<Vector3<f32>> {
     let mut last = positions.last().unwrap();
@@ -22,10 +24,10 @@ fn calculate_normals(positions: &Vec<Vector3<f32>>) -> Vec<Vector3<f32>> {
 
         normals.push(v3.normalize());
         last = current;
-        next = if i+2 >= positions.len() {
+        next = if i + 2 >= positions.len() {
             &positions[0]
         } else {
-            &positions[i+2]
+            &positions[i + 2]
         };
     }
 
@@ -37,6 +39,7 @@ pub fn load_mtl_file(
     file_name: &str,
     mesh_model: &mut MeshModel,
     gl: &Context,
+    game: &Game,
 ) -> anyhow::Result<()> {
     println!("Start loading MTL: {file_name}");
     let mut mtl = None;
@@ -61,12 +64,21 @@ pub fn load_mtl_file(
                 }
 
                 println!("Material {}", tokens[1]);
-                mtl = Some(Material::new(None, None, None));
+                mtl = Some(Material::new(None, None, None, None));
                 mtl_name = Some(tokens[1].to_string());
+            }
+            "Ka" => {
+                mtl.as_mut().unwrap().ambient =
+                    Color::new(tokens[1].parse()?, tokens[2].parse()?, tokens[3].parse()?);
             }
             "Kd" => {
                 mtl.as_mut().unwrap().diffuse =
                     Color::new(tokens[1].parse()?, tokens[2].parse()?, tokens[3].parse()?);
+            }
+            "map_Kd" => {
+                let texture_name = tokens[1];
+                let tex_id = game.load_texture(texture_name);
+                mesh_model.add_material_texture(mtl_name.as_ref().unwrap(), &tex_id);
             }
             "Ks" => {
                 mtl.as_mut().unwrap().specular =
@@ -85,13 +97,19 @@ pub fn load_mtl_file(
     Ok(())
 }
 
-pub fn load_obj_file<'a>(file_location: &str, file_name: &str, gl: &'a Context) -> anyhow::Result<MeshModel<'a>> {
+pub fn load_obj_file<'a>(
+    file_location: &str,
+    file_name: &str,
+    gl: &'a Context,
+    game: &Game,
+) -> anyhow::Result<MeshModel<'a>> {
     println!("Start loading OBJ: {file_name}");
 
     let mut mesh_model = MeshModel::new(gl);
     let mut current_object_id = None;
     let mut current_position_list = Vec::new();
     let mut current_normal_list = Vec::new();
+    let mut current_uv_list = Vec::new();
 
     let fin = fs::File::open(format!("{file_location}/{file_name}"))?;
     let lines = io::BufReader::new(fin).lines();
@@ -108,7 +126,7 @@ pub fn load_obj_file<'a>(file_location: &str, file_name: &str, gl: &'a Context) 
 
         match tokens[0] {
             "mtllib" => {
-                load_mtl_file(file_location, tokens[1], &mut mesh_model, gl)?;
+                load_mtl_file(file_location, tokens[1], &mut mesh_model, gl, game)?;
             }
             "o" => {
                 println!("Mesh: {}", tokens[1]);
@@ -120,6 +138,9 @@ pub fn load_obj_file<'a>(file_location: &str, file_name: &str, gl: &'a Context) 
                     tokens[2].parse()?,
                     tokens[3].parse()?,
                 ));
+            }
+            "vt" => {
+                current_uv_list.push(Vector2::new(tokens[1].parse()?, tokens[2].parse()?));
             }
             "vn" => {
                 current_normal_list.push(Vector3::new(
@@ -136,16 +157,31 @@ pub fn load_obj_file<'a>(file_location: &str, file_name: &str, gl: &'a Context) 
                     .iter()
                     .map(|&t| t.split("/").map(|s| s.to_string()).collect::<Vec<String>>())
                     .collect::<Vec<Vec<String>>>();
-                
+
                 //if current_normal_list.len() == 0 {
                 //    current_normal_list = calculate_normals(&current_position_list);
                 //}
 
                 let vertex_count = tokens.len() - 1;
-                for i in 0..(vertex_count -2) {
-                    mesh_model.add_vertex(current_object_id.as_ref().unwrap(), current_position_list[(tokens[1][0].parse::<usize>()?)-1], current_normal_list[(tokens[1][2]).parse::<usize>()?-1]);
-                    mesh_model.add_vertex(current_object_id.as_ref().unwrap(), current_position_list[(tokens[i+2][0].parse::<usize>()?)-1], current_normal_list[(tokens[i+2][2]).parse::<usize>()?-1]);
-                    mesh_model.add_vertex(current_object_id.as_ref().unwrap(), current_position_list[(tokens[i+3][0].parse::<usize>()?)-1], current_normal_list[(tokens[i+3][2]).parse::<usize>()?-1]);
+                for i in 0..(vertex_count - 2) {
+                    mesh_model.add_vertex(
+                        current_object_id.as_ref().unwrap(),
+                        current_position_list[(tokens[1][0].parse::<usize>()?) - 1],
+                        current_normal_list[(tokens[1][2]).parse::<usize>()? - 1],
+                        current_uv_list[(tokens[1][1]).parse::<usize>()? - 1],
+                    );
+                    mesh_model.add_vertex(
+                        current_object_id.as_ref().unwrap(),
+                        current_position_list[(tokens[i + 2][0].parse::<usize>()?) - 1],
+                        current_normal_list[(tokens[i + 2][2]).parse::<usize>()? - 1],
+                        current_uv_list[(tokens[i + 2][1]).parse::<usize>()? - 1],
+                    );
+                    mesh_model.add_vertex(
+                        current_object_id.as_ref().unwrap(),
+                        current_position_list[(tokens[i + 3][0].parse::<usize>()?) - 1],
+                        current_normal_list[(tokens[i + 3][2]).parse::<usize>()? - 1],
+                        current_uv_list[(tokens[i + 3][1]).parse::<usize>()? - 1],
+                    );
                 }
             }
             _ => (),

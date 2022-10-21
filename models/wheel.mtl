@@ -8,6 +8,6 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd F:/Downloads/ferrari-246-f1-vintage-car/source/Ferrari 246/Ferrari_246_F1_Low_Wheels_BaseColor.png
-map_Ns F:/Downloads/ferrari-246-f1-vintage-car/source/Ferrari 246/Ferrari_246_F1_Low_Wheels_Roughness.png
-map_refl F:/Downloads/ferrari-246-f1-vintage-car/source/Ferrari 246/Ferrari_246_F1_Low_Wheels_Metallic.png
+map_Kd ./models/textures/car/Ferrari_246_F1_Low_Wheels_BaseColor.png
+map_Ns ./models/textures/car/Ferrari_246_F1_Low_Wheels_Roughness.png
+map_refl ./models/textures/car/Ferrari_246_F1_Low_Wheels_Metallic.png

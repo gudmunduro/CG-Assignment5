@@ -9,6 +9,7 @@ pub struct Shader3D<'a> {
     rendering_program_id: NativeProgram,
     position_loc: u32,
     normal_loc: u32,
+    uv_loc: u32,
     model_matrix_loc: NativeUniformLocation,
     projection_matrix_loc: NativeUniformLocation,
     view_matrix_loc: NativeUniformLocation,
@@ -61,6 +62,11 @@ impl<'a> Shader3D<'a> {
                 .unwrap();
             gl.enable_vertex_attrib_array(normal_loc);
 
+            let uv_loc = gl
+                .get_attrib_location(rendering_program_id, "a_uv")
+                .unwrap();
+            gl.enable_vertex_attrib_array(uv_loc);
+
             let model_matrix_loc = gl
                 .get_uniform_location(rendering_program_id, "u_model_matrix")
                 .unwrap();
@@ -92,7 +98,7 @@ impl<'a> Shader3D<'a> {
                 .get_uniform_location(rendering_program_id, "u_material_specular")
                 .unwrap();
             let mat_amb_loc = gl
-                .get_uniform_location(rendering_program_id, "u_material_ambient_factor")
+                .get_uniform_location(rendering_program_id, "u_material_ambient")
                 .unwrap();
             let mat_shine_loc = gl
                 .get_uniform_location(rendering_program_id, "u_material_shininess")
@@ -103,6 +109,7 @@ impl<'a> Shader3D<'a> {
                 rendering_program_id,
                 position_loc,
                 normal_loc,
+                uv_loc,
                 model_matrix_loc,
                 projection_matrix_loc,
                 view_matrix_loc,
@@ -174,11 +181,26 @@ impl<'a> Shader3D<'a> {
         }
     }
 
+    pub fn set_uv_attribute(&self, uv_array: &[f32]) {
+        unsafe {
+            let array_ptr: u64 = mem::transmute(uv_array.as_ptr());
+            self.gl.vertex_attrib_pointer_f32(
+                self.uv_loc,
+                2,
+                FLOAT,
+                false,
+                0,
+                array_ptr,
+            );
+        }
+    }
+
     pub fn set_attribute_buffers(&self, vertex_buffer_id: &NativeBuffer) {
         unsafe {
             self.gl.bind_buffer(ARRAY_BUFFER, Some(vertex_buffer_id.clone()));
-            self.gl.vertex_attrib_pointer_f32(self.position_loc, 3, FLOAT, false, 6 * mem::size_of::<f32>() as i32, 0);
-            self.gl.vertex_attrib_pointer_f32(self.normal_loc, 3, FLOAT, false, 6 * mem::size_of::<f32>() as i32, 3 * mem::size_of::<f32>() as u64);
+            self.gl.vertex_attrib_pointer_f32(self.position_loc, 3, FLOAT, false, 8 * mem::size_of::<f32>() as i32, 0);
+            self.gl.vertex_attrib_pointer_f32(self.normal_loc, 3, FLOAT, false, 8 * mem::size_of::<f32>() as i32, 3 * mem::size_of::<f32>() as u64);
+            self.gl.vertex_attrib_pointer_f32(self.uv_loc, 2, FLOAT, false, 8 * mem::size_of::<f32>() as i32, 2 * mem::size_of::<f32>() as u64);
         }
     }
 
@@ -232,9 +254,11 @@ impl<'a> Shader3D<'a> {
         }
     }
 
-    pub fn set_material_ambient(&self, value: f32) {
+    pub fn set_material_ambient(&self, color: &Color) {
+        let Color { r, g, b } = color.clone();
+
         unsafe {
-            self.gl.uniform_1_f32(Some(&self.mat_amb_loc), value);
+            self.gl.uniform_4_f32(Some(&self.mat_amb_loc), r, g, b, 0.0);
         }
     }
 

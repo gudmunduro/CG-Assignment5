@@ -1,7 +1,7 @@
-use std::{collections::HashMap, num::NonZeroU32, slice};
+use std::{collections::HashMap, num::NonZeroU32, slice, hash::Hash};
 
 use glow::*;
-use nalgebra::Vector3;
+use nalgebra::{Vector3, Vector2};
 
 use crate::core::{material::Material, shader::Shader3D};
 
@@ -11,6 +11,7 @@ pub struct MeshModel<'a> {
     vertex_arrays: HashMap<String, Vec<f32>>,
     mesh_materials: HashMap<String, String>,
     materials: HashMap<String, Material>,
+    material_textures: HashMap<String, NativeTexture>,
     vertex_counts: HashMap<String, i32>,
     vertex_buffer_ids: HashMap<String, NativeBuffer>,
     gl: &'a Context
@@ -22,19 +23,20 @@ impl<'a> MeshModel<'a> {
             vertex_arrays: HashMap::new(),
             mesh_materials: HashMap::new(),
             materials: HashMap::new(),
+            material_textures: HashMap::new(),
             vertex_counts: HashMap::new(),
             vertex_buffer_ids: HashMap::new(),
             gl,
         }
     }
 
-    pub fn add_vertex(&mut self, mesh_id: &str, position: Vector3<f32>, normal: Vector3<f32>) {
+    pub fn add_vertex(&mut self, mesh_id: &str, position: Vector3<f32>, normal: Vector3<f32>, uv: Vector2<f32>) {
         if !self.vertex_arrays.contains_key(mesh_id) {
             self.vertex_arrays.insert(mesh_id.to_string(), Vec::new());
             self.vertex_counts.insert(mesh_id.to_string(), 0);
         }
 
-        self.vertex_arrays.get_mut(mesh_id).unwrap().extend(vec![position.x, position.y, position.z, normal.x, normal.y, normal.z]);
+        self.vertex_arrays.get_mut(mesh_id).unwrap().extend(vec![position.x, position.y, position.z, normal.x, normal.y, normal.z, uv.x, uv.y]);
         *self.vertex_counts.get_mut(mesh_id).unwrap() += 1;
     }
 
@@ -44,6 +46,10 @@ impl<'a> MeshModel<'a> {
 
     pub fn add_material(&mut self, mat_id: &str, mat: &Material) {
         self.materials.insert(mat_id.to_string(), mat.clone());
+    }
+
+    pub fn add_material_texture(&mut self, mat_id: &str, texture: &Texture) {
+        self.material_textures.insert(mat_id.to_string(), texture.clone());
     }
 
     pub fn set_opengl_buffers(&mut self) {
@@ -63,9 +69,21 @@ impl<'a> MeshModel<'a> {
             let material = &self.materials[mesh_material];
             shader.set_material_diffuse(&material.diffuse);
             shader.set_material_specular(&material.specular);
-            shader.set_material_ambient(AMBIENT_FACTOR);
+            shader.set_material_ambient(&material.ambient);
             shader.set_shininess(material.shininess);
             shader.set_attribute_buffers(&self.vertex_buffer_ids[mesh_id]);
+
+            // Texture
+            if self.material_textures.contains_key(mesh_material) {
+                unsafe {
+                    self.gl.bind_texture(TEXTURE_2D, Some(self.material_textures.get(mesh_material).unwrap().clone()))
+                }
+            }
+            else {
+                unsafe {
+                    self.gl.bind_texture(TEXTURE_2D, Some(NativeTexture(NonZeroU32::new_unchecked(0))));
+                }
+            }
 
             unsafe {
                 self.gl.draw_arrays(TRIANGLES, 0, self.vertex_counts[mesh_id]);

@@ -2,6 +2,7 @@ const int LIGHT_COUNT = 1;
 
 attribute vec3 a_position;
 attribute vec3 a_normal;
+attribute vec2 a_uv;
 uniform vec4 u_light_position[LIGHT_COUNT];
 uniform vec4 u_eye_position;
 
@@ -30,7 +31,7 @@ void main(void)
 	position = u_view_matrix * position;
 	position = u_projection_matrix * position;
 
-	v_uv = vec2(1, 0);
+	v_uv = a_uv;
 
 	gl_Position = position;
 }
