@@ -1,10 +1,10 @@
-# Blender 3.3.1 MTL File: 'None'
+# Blender 3.3.1 MTL File: 'car.blend'
 # www.blender.org
 
 newmtl Car
 Ns 360.000000
 Ka 1.000000 1.000000 1.000000
-Kd 0.800000 0.800000 0.800000
+Kd 1.000000 1.000000 1.000000
 Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
 Ni 1.450000
@@ -20,9 +20,9 @@ Ni 1.450000
 d 1.000000
 illum 2
 map_Kd ./models/textures/car/Ferrari_246_F1_Low_Interior__BaseColor.png
-map_Ns ./models/textures/car/Ferrari_246_F1_Low_Interior__Roughness.png
-map_refl ./models/textures/car/Ferrari_246_F1_Low_Interior__Metallic.png
-map_Bump -bm 1.000000 ./models/textures/car/Ferrari_246_F1_Low_Interior__Normal.png
+map_Ns ./models/textures/car/Ferrari_246_F1_Low_Interior _Roughness.png
+map_refl ./models/textures/car/Ferrari_246_F1_Low_Interior _Metallic.png
+map_Bump -bm 1.000000 F:/Downloads/ferrari-246-f1-vintage-car/source/Ferrari 246/Ferrari_246_F1_Low_Interior _Normal.png
 
 newmtl Wheel_new
 Ka 1.000000 1.000000 1.000000

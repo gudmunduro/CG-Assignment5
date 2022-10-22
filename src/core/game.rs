@@ -3,7 +3,7 @@ use std::{time::Instant, cell::RefCell, path::Path, slice};
 use crate::{core::{
     matrices::{ModelMatrix, ProjectionMatrix, ViewMatrix},
     shader::Shader3D,
-}, objects::cube::Cube, game_objects::{car::Car, freecam_controller::FreecamController, ground::Ground, blender_test::BTest}};
+}, objects::cube::Cube, game_objects::{car::Car, freecam_controller::FreecamController, ground::Ground, blender_test::BTest, road_surface::RoadSurface, track::Track}};
 use glow::*;
 use sdl2::{
     image::ImageRWops,
@@ -64,10 +64,11 @@ impl<'a> Game<'a> {
     }
 
     pub fn create_scene(&mut self) {
-        // self.add_game_object(Car::new(self.gl, self));
+        self.add_game_object(Car::new(self.gl, self));
         self.add_game_object(BTest::new(self.gl, self));
         self.add_game_object(Ground::new());
-        self.add_game_object(FreecamController::new(self.gl));
+        // self.add_game_object(FreecamController::new(self.gl));
+        self.add_game_object(Track::new(self.gl, self));
     }
 
     #[inline(always)]

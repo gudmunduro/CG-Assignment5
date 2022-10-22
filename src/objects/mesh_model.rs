@@ -11,7 +11,6 @@ pub struct MeshModel<'a> {
     vertex_arrays: HashMap<String, Vec<f32>>,
     mesh_materials: HashMap<String, String>,
     materials: HashMap<String, Material>,
-    material_textures: HashMap<String, NativeTexture>,
     vertex_counts: HashMap<String, i32>,
     vertex_buffer_ids: HashMap<String, NativeBuffer>,
     gl: &'a Context
@@ -23,7 +22,6 @@ impl<'a> MeshModel<'a> {
             vertex_arrays: HashMap::new(),
             mesh_materials: HashMap::new(),
             materials: HashMap::new(),
-            material_textures: HashMap::new(),
             vertex_counts: HashMap::new(),
             vertex_buffer_ids: HashMap::new(),
             gl,
@@ -48,17 +46,13 @@ impl<'a> MeshModel<'a> {
         self.materials.insert(mat_id.to_string(), mat.clone());
     }
 
-    pub fn add_material_texture(&mut self, mat_id: &str, texture: &Texture) {
-        self.material_textures.insert(mat_id.to_string(), texture.clone());
-    }
-
     pub fn set_opengl_buffers(&mut self) {
         for mesh_id in self.mesh_materials.keys() {
             unsafe {
                 let buffer = self.gl.create_buffer().unwrap();
                 self.vertex_buffer_ids.insert(mesh_id.to_string(), buffer);
                 self.gl.bind_buffer(ARRAY_BUFFER, Some(self.vertex_buffer_ids[mesh_id]));
-                self.gl.buffer_data_u8_slice(ARRAY_BUFFER,  slice::from_raw_parts(self.vertex_arrays[mesh_id].as_ptr() as *const u8, self.vertex_arrays[mesh_id].len() * 4), STATIC_DRAW);
+                self.gl.buffer_data_u8_slice(ARRAY_BUFFER, slice::from_raw_parts(self.vertex_arrays[mesh_id].as_ptr() as *const u8, self.vertex_arrays[mesh_id].len() * 4), STATIC_DRAW);
                 self.gl.bind_buffer(ARRAY_BUFFER, Some(NativeBuffer(NonZeroU32::new_unchecked(0))));
             }
         }
@@ -74,9 +68,9 @@ impl<'a> MeshModel<'a> {
             shader.set_attribute_buffers(&self.vertex_buffer_ids[mesh_id]);
 
             // Texture
-            if self.material_textures.contains_key(mesh_material) {
+            if let Some(texture) = material.texture {
                 unsafe {
-                    self.gl.bind_texture(TEXTURE_2D, Some(self.material_textures.get(mesh_material).unwrap().clone()))
+                    self.gl.bind_texture(TEXTURE_2D, Some(texture));
                 }
             }
             else {

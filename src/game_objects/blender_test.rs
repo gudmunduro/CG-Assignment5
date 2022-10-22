@@ -33,7 +33,7 @@ impl<'a> GameObject<'a> for BTest<'a> {
         let mut model_matrix = game.model_matrix.borrow_mut();
 
         model_matrix.push_stack();
-        model_matrix.add_translate(0.0, 0.0, -8.0);
+        model_matrix.add_translate(0.0, 2.0, -8.0);
         model_matrix.add_scale(2.0, 2.0, 2.0);
 
         game.shader.set_material_ambient(&Color::new(1.0, 1.0, 1.0));
@@ -43,7 +43,7 @@ impl<'a> GameObject<'a> for BTest<'a> {
 
         game.shader.set_model_matrix(model_matrix.matrix.as_slice());
         unsafe {
-            gl.bind_buffer(TEXTURE_2D, Some(self.texture));
+            gl.bind_texture(TEXTURE_2D, Some(self.texture));
         }
 
         self.dice.draw(&game.shader);

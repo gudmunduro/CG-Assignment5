@@ -88,7 +88,6 @@ impl<'a> GameObject<'a> for Car<'a> {
     }
 
     fn update(&mut self, game: &Game, gl: &'a Context) {
-        return;
         let mut view_matrix = game.view_matrix.borrow_mut();
         let ang_sin = self.rotation.sin();
         let ang_cos = self.rotation.cos();
@@ -130,7 +129,7 @@ impl<'a> GameObject<'a> for Car<'a> {
         self.car_model.draw(&game.shader);
 
         model_matrix.push_stack();
-        model_matrix.add_translate(0.4, 0.0, 0.9);
+        model_matrix.add_translate(0.4, 0.0, 0.8);
         model_matrix.add_rotation(0.0, 90.0f32.to_radians(), 0.0);
         game.shader.set_model_matrix(model_matrix.matrix.as_slice());
         self.wheel_model.draw(&game.shader);
@@ -144,7 +143,7 @@ impl<'a> GameObject<'a> for Car<'a> {
         model_matrix.pop_stack();
 
         model_matrix.push_stack();
-        model_matrix.add_translate(0.4, 0.0, -0.5);
+        model_matrix.add_translate(0.4, 0.0, -0.49);
         model_matrix.add_rotation(0.0, 90.0f32.to_radians(), 0.0);
         game.shader.set_model_matrix(model_matrix.matrix.as_slice());
         self.wheel_model.draw(&game.shader);

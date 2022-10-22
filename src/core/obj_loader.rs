@@ -64,7 +64,7 @@ pub fn load_mtl_file(
                 }
 
                 println!("Material {}", tokens[1]);
-                mtl = Some(Material::new(None, None, None, None));
+                mtl = Some(Material::new(None, None, None, None, None));
                 mtl_name = Some(tokens[1].to_string());
             }
             "Ka" => {
@@ -78,7 +78,7 @@ pub fn load_mtl_file(
             "map_Kd" => {
                 let texture_name = tokens[1];
                 let tex_id = game.load_texture(texture_name);
-                mesh_model.add_material_texture(mtl_name.as_ref().unwrap(), &tex_id);
+                mtl.as_mut().unwrap().texture = Some(tex_id);
             }
             "Ks" => {
                 mtl.as_mut().unwrap().specular =
@@ -140,7 +140,7 @@ pub fn load_obj_file<'a>(
                 ));
             }
             "vt" => {
-                current_uv_list.push(Vector2::new(tokens[1].parse()?, tokens[2].parse()?));
+                current_uv_list.push(Vector2::new(tokens[1].parse()?, -tokens[2].parse::<f32>()?));
             }
             "vn" => {
                 current_normal_list.push(Vector3::new(

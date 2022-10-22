@@ -200,7 +200,7 @@ impl<'a> Shader3D<'a> {
             self.gl.bind_buffer(ARRAY_BUFFER, Some(vertex_buffer_id.clone()));
             self.gl.vertex_attrib_pointer_f32(self.position_loc, 3, FLOAT, false, 8 * mem::size_of::<f32>() as i32, 0);
             self.gl.vertex_attrib_pointer_f32(self.normal_loc, 3, FLOAT, false, 8 * mem::size_of::<f32>() as i32, 3 * mem::size_of::<f32>() as u64);
-            self.gl.vertex_attrib_pointer_f32(self.uv_loc, 2, FLOAT, false, 8 * mem::size_of::<f32>() as i32, 2 * mem::size_of::<f32>() as u64);
+            self.gl.vertex_attrib_pointer_f32(self.uv_loc, 2, FLOAT, false, 8 * mem::size_of::<f32>() as i32, 6 * mem::size_of::<f32>() as u64);
         }
     }
 
