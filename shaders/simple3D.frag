@@ -8,6 +8,7 @@ uniform vec4 u_material_specular;
 uniform vec4 u_material_ambient;
 uniform float u_material_shininess;
 uniform sampler2D texture;
+uniform bool u_render_texture;
 
 varying vec4 s[LIGHT_COUNT];
 varying vec4 v;
@@ -19,8 +20,9 @@ void main(void)
 	vec4 global_ambient = vec4(0.4, 0.4, 0.4, 1.0);
 	vec4 light_calculated_color = vec4(0.0, 0.0, 0.0, 0.0);
 
-	vec4 ambient_material = u_material_ambient * texture2D(texture, v_uv);
-	vec4 diffuse_material = u_material_diffuse * texture2D(texture, v_uv);
+	vec4 texture = u_render_texture ? texture2D(texture, v_uv) : vec4(1, 1, 1, 1);
+	vec4 ambient_material = u_material_ambient * texture;
+	vec4 diffuse_material = u_material_diffuse * texture;
 	for (int i = 0; i < LIGHT_COUNT; i++) {
 		vec4 h = normalize(s[i] + v);
     	float lambert = max(0.0, dot(normal, s[i]) / (length(normal) * length(s[i])));

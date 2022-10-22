@@ -1,5 +1,3 @@
-use std::num::NonZeroU32;
-
 use glow::*;
 
 use crate::core::shader::Shader3D;
@@ -79,6 +77,7 @@ impl<'a> TexturedCube<'a> {
         shader.set_position_attribute(&self.position_array);
         shader.set_normal_attribute(&self.normal_array);
         shader.set_uv_attribute(&self.uv_array);
+        shader.set_render_texture(true);
         
         unsafe {
             self.gl.bind_texture(TEXTURE_2D, Some(texture.clone()));

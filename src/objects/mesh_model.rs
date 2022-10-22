@@ -1,4 +1,4 @@
-use std::{collections::HashMap, num::NonZeroU32, slice, hash::Hash};
+use std::{collections::HashMap, slice, hash::Hash};
 
 use glow::*;
 use nalgebra::{Vector3, Vector2};
@@ -53,7 +53,7 @@ impl<'a> MeshModel<'a> {
                 self.vertex_buffer_ids.insert(mesh_id.to_string(), buffer);
                 self.gl.bind_buffer(ARRAY_BUFFER, Some(self.vertex_buffer_ids[mesh_id]));
                 self.gl.buffer_data_u8_slice(ARRAY_BUFFER, slice::from_raw_parts(self.vertex_arrays[mesh_id].as_ptr() as *const u8, self.vertex_arrays[mesh_id].len() * 4), STATIC_DRAW);
-                self.gl.bind_buffer(ARRAY_BUFFER, Some(NativeBuffer(NonZeroU32::new_unchecked(0))));
+                self.gl.bind_buffer(ARRAY_BUFFER, None);
             }
         }
     }
@@ -66,6 +66,7 @@ impl<'a> MeshModel<'a> {
             shader.set_material_ambient(&material.ambient);
             shader.set_shininess(material.shininess);
             shader.set_attribute_buffers(&self.vertex_buffer_ids[mesh_id]);
+            shader.set_render_texture(true);
 
             // Texture
             if let Some(texture) = material.texture {
@@ -75,13 +76,13 @@ impl<'a> MeshModel<'a> {
             }
             else {
                 unsafe {
-                    self.gl.bind_texture(TEXTURE_2D, Some(NativeTexture(NonZeroU32::new_unchecked(0))));
+                    self.gl.bind_texture(TEXTURE_2D, None);
                 }
             }
 
             unsafe {
                 self.gl.draw_arrays(TRIANGLES, 0, self.vertex_counts[mesh_id]);
-                self.gl.bind_buffer(ARRAY_BUFFER, Some(NativeBuffer(NonZeroU32::new_unchecked(0))));
+                self.gl.bind_buffer(ARRAY_BUFFER, None);
             }
         }
     }

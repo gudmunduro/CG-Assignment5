@@ -3,7 +3,7 @@ use std::{time::Instant, cell::RefCell, path::Path, slice};
 use crate::{core::{
     matrices::{ModelMatrix, ProjectionMatrix, ViewMatrix},
     shader::Shader3D,
-}, objects::cube::Cube, game_objects::{car::Car, freecam_controller::FreecamController, ground::Ground, blender_test::BTest, road_surface::RoadSurface, track::Track}};
+}, objects::cube::Cube, game_objects::{car::Car, freecam_controller::FreecamController, ground::Ground, road_surface::RoadSurface, track::Track}};
 use glow::*;
 use sdl2::{
     image::ImageRWops,
@@ -65,7 +65,6 @@ impl<'a> Game<'a> {
 
     pub fn create_scene(&mut self) {
         self.add_game_object(Car::new(self.gl, self));
-        self.add_game_object(BTest::new(self.gl, self));
         self.add_game_object(Ground::new());
         // self.add_game_object(FreecamController::new(self.gl));
         self.add_game_object(Track::new(self.gl, self));
@@ -76,7 +75,7 @@ impl<'a> Game<'a> {
         self.game_objects.push(Box::new(RefCell::new(object)) as Box<RefCell<dyn GameObject<'a>>>);
     }
 
-    pub fn load_texture(&self, path_string: &str) -> NativeTexture {
+    pub fn load_texture(&self, path_string: &str, repeat: bool) -> NativeTexture {
         let loader = sdl2::rwops::RWops::from_file(Path::new(path_string), "r").expect("Failed to load texture");
         let surface = loader.load_png().unwrap().convert_format(PixelFormatEnum::RGBA32).unwrap();
         let width = surface.width();
@@ -87,6 +86,12 @@ impl<'a> Game<'a> {
             self.gl.bind_texture(TEXTURE_2D, Some(tex_id));
             self.gl.tex_parameter_i32(TEXTURE_2D, TEXTURE_MAG_FILTER, LINEAR as i32);
             self.gl.tex_parameter_i32(TEXTURE_2D, TEXTURE_MIN_FILTER, LINEAR as i32);
+
+            if repeat {
+                self.gl.tex_parameter_i32(TEXTURE_2D, TEXTURE_WRAP_S, REPEAT as i32);
+                self.gl.tex_parameter_i32(TEXTURE_2D, TEXTURE_WRAP_T, REPEAT as i32);
+            }
+
             self.gl.tex_image_2d(TEXTURE_2D, 0, RGBA as i32, width as i32, height as i32, 0, RGBA, UNSIGNED_BYTE, surface.without_lock());
             
             tex_id

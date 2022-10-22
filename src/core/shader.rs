@@ -22,6 +22,7 @@ pub struct Shader3D<'a> {
     mat_spec_loc: NativeUniformLocation,
     mat_amb_loc: NativeUniformLocation,
     mat_shine_loc: NativeUniformLocation,
+    render_texture_loc: NativeUniformLocation,
 }
 
 impl<'a> Shader3D<'a> {
@@ -103,6 +104,9 @@ impl<'a> Shader3D<'a> {
             let mat_shine_loc = gl
                 .get_uniform_location(rendering_program_id, "u_material_shininess")
                 .unwrap();
+            let render_texture_loc = gl
+                .get_uniform_location(rendering_program_id, "u_render_texture")
+                .unwrap();
 
             Shader3D {
                 gl,
@@ -122,6 +126,7 @@ impl<'a> Shader3D<'a> {
                 mat_spec_loc,
                 mat_amb_loc,
                 mat_shine_loc,
+                render_texture_loc,
             }
         }
     }
@@ -265,6 +270,12 @@ impl<'a> Shader3D<'a> {
     pub fn set_shininess(&self, s: f32) {
         unsafe {
             self.gl.uniform_1_f32(Some(&self.mat_shine_loc), s);
+        }
+    }
+
+    pub fn set_render_texture(&self, value: bool) {
+        unsafe {
+            self.gl.uniform_1_u32(Some(&self.render_texture_loc), value as u32);
         }
     }
 }

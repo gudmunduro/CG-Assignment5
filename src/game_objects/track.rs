@@ -7,31 +7,21 @@ use super::road_surface::RoadSurface;
 
 
 pub struct Track<'a> {
-    surface_cube: TexturedCube<'a>,
-    road_texture: NativeTexture,
     track: Vec<RoadSurface<'a>>
 }
 
 impl<'a> Track<'a> {
     pub fn new(gl: &'a Context, game: &Game) -> Track<'a> {
-        let road_texture = game.load_texture("./models/textures/road.png");
-        let surface_cube = TexturedCube::new(gl);
         let track = Track::create_track(gl, game);
 
-        Track { surface_cube, road_texture, track }
+        Track { track }
     }
 
     fn create_track<'b>(gl: &'b Context, game: &Game) -> Vec<RoadSurface<'b>> {
         let mut track = Vec::new();
 
-
-        for i in 0..20 {
-            track.push(RoadSurface::new(Vector3::new(0.0, 0.0, 10.0 * i as f32), Vector2::new(10.0, 10.0), gl, game));    
-        }
-
-        for i in 0..20 {
-            track.push(RoadSurface::new(Vector3::new(10.0 * i as f32, 0.0, 10.0 * 20.0), Vector2::new(10.0, 10.0), gl, game));    
-        }
+        track.push(RoadSurface::new(Vector3::new(0.0, 0.0, 105.0), Vector2::new(10.0, 200.0), gl, game));
+        // track.push(RoadSurface::new(Vector3::new(105.0, 0.0, 200.0), Vector2::new(200.0, 10.0), gl, game));
 
         track
     }

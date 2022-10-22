@@ -6,8 +6,8 @@ use super::limit;
 
 const DRAG_FORCE: f32 = 5.0;
 const ROLLING_RESISTANCE: f32 = 30.0;
-const CA_F: f32 = -3.0;
-const CA_R: f32 = -3.20;
+const CA_F: f32 = -5.0;
+const CA_R: f32 = -5.20;
 const MAX_GRIP: f32 = 2.0;
 
 const CAR_B: f32 = 1.0;

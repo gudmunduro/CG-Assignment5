@@ -77,7 +77,7 @@ pub fn load_mtl_file(
             }
             "map_Kd" => {
                 let texture_name = tokens[1];
-                let tex_id = game.load_texture(texture_name);
+                let tex_id = game.load_texture(texture_name, false);
                 mtl.as_mut().unwrap().texture = Some(tex_id);
             }
             "Ks" => {
