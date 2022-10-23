@@ -1,6 +1,6 @@
 use glow::{Context, NativeTexture};
 
-use crate::{core::{game_object::{GameObject, CollisionInfo}, game::Game, color::Color}, objects::textured_square::TexturedSquare};
+use crate::{core::{game_object::{GameObject, CollisionInfo}, game::Game, color::Color}, objects::textured_square::TexturedSquare, utils::FacingDirection};
 
 
 pub struct Ground<'a> {
@@ -11,7 +11,7 @@ pub struct Ground<'a> {
 impl<'a> Ground<'a> {
     pub fn new(gl: &'a Context, game: &Game) -> Ground<'a> {
         let texture = game.load_texture("./models/textures/desert.png", true);
-        let ground = TexturedSquare::new(gl, 800.0, 800.0);
+        let ground = TexturedSquare::new(gl, 800.0, 800.0, FacingDirection::North);
 
         Ground { ground, texture }
     }

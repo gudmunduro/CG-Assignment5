@@ -1,7 +1,7 @@
 use glow::{Context, NativeTexture};
 use nalgebra::{Vector3, Vector2};
 
-use crate::{core::{game_object::{GameObject, CollisionInfo}, game::Game, color::Color}, objects::textured_square::TexturedSquare};
+use crate::{core::{game_object::{GameObject, CollisionInfo}, game::Game, color::Color}, objects::textured_square::TexturedSquare, utils::FacingDirection};
 
 use super::track_segment::{TrackSegment, SegmentType};
 
@@ -20,9 +20,9 @@ impl<'a> Track<'a> {
     fn create_track<'b>(gl: &'b Context, game: &Game) -> Vec<TrackSegment<'b>> {
         let mut track = Vec::new();
 
-        track.push(TrackSegment::new(SegmentType::Straight(Vector3::new(0.0, 0.0, 105.0), Vector2::new(10.0, 200.0)), gl, game));
-        track.push(TrackSegment::new(SegmentType::Corner(Vector3::new(-5.0, 0.0, 205.0), Vector3::new(50.0, 1.0, 300.0), Vector3::new(100.0, 1.0, 250.0), 10.0), gl, game));
-        track.push(TrackSegment::new(SegmentType::Straight(Vector3::new(100.0, 0.0, 250.0), Vector2::new(50.0, 10.0)), gl, game));
+        track.push(TrackSegment::new(SegmentType::Straight(Vector3::new(0.0, 0.0, 86.0), FacingDirection::North, 200.0), gl, game));
+        track.push(TrackSegment::new(SegmentType::RightCorner(Vector3::new(-5.0, 0.0, 235.0)), gl, game));
+        track.push(TrackSegment::new(SegmentType::Straight(Vector3::new(143.0, 0.0, 230.0), FacingDirection::West, 200.0), gl, game));
         // track.push(RoadSurface::new(Vector3::new(105.0, 0.0, 200.0), Vector2::new(200.0, 10.0), gl, game));
 
         track

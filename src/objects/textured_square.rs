@@ -3,7 +3,7 @@ use std::slice;
 use glow::*;
 use itertools::{izip, Itertools};
 
-use crate::core::shader::Shader3D;
+use crate::{core::shader::Shader3D, utils::FacingDirection};
 
 const MAX_SIZE: f32 = 20.0;
 
@@ -14,7 +14,7 @@ pub struct TexturedSquare<'a> {
 }
 
 impl<'a> TexturedSquare<'a> {
-    pub fn new(gl: &'a Context, width: f32, height: f32) -> TexturedSquare {
+    pub fn new(gl: &'a Context, width: f32, height: f32, texture_dir: FacingDirection) -> TexturedSquare {
         let width_segment_count = (width as i32 / MAX_SIZE as i32).max(2);
         let height_segment_count = (height as i32 / MAX_SIZE as i32).max(2);
         let width_remaining_size = width % MAX_SIZE;
@@ -67,15 +67,31 @@ impl<'a> TexturedSquare<'a> {
             .flat_map(|_| [0.0, 1.0, 0.0])
             .collect();
 
-        let uv_array: Vec<f32> = (0..position_array.len() / 3)
-            .flat_map(|i| match i % 4 {
-                0 => [0.0, 0.0],
-                1 => [0.0, 1.0],
-                2 => [1.0, 1.0],
-                3 => [1.0, 0.0],
-                _ => [0.0, 0.0],
-            })
-            .collect();
+        use FacingDirection::*;
+        let uv_array: Vec<f32> = match texture_dir {
+            North => {
+                (0..position_array.len() / 3)
+                    .flat_map(|i| match i % 4 {
+                        0 => [0.0, 0.0],
+                        1 => [0.0, 1.0],
+                        2 => [1.0, 1.0],
+                        3 => [1.0, 0.0],
+                        _ => [0.0, 0.0],
+                    })
+                    .collect()
+            }
+            West => {
+                (0..position_array.len() / 3)
+                    .flat_map(|i| match i % 4 {
+                        0 => [0.0, 0.0],
+                        1 => [1.0, 0.0],
+                        2 => [1.0, 1.0],
+                        3 => [0.0, 1.0],
+                        _ => [0.0, 0.0],
+                    })
+                    .collect()
+            }
+        };
 
         let vertex_array = izip!(
             position_array.iter().tuples(),
