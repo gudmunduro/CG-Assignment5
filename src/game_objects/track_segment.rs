@@ -11,22 +11,21 @@ use crate::{
 };
 
 const TRACK_ELEVATION: f32 = 10.0;
-const TRACK_STRAIGHT_LENGTH: f32 = 10.0;
+const TRACK_WIDTH: f32 = 20.0;
 
 pub enum SegmentType {
     // Position, direction, length
     Straight(Vector3<f32>, FacingDirection, f32),
-    // Enter, control, exit, track width
-    // Corner(Vector3<f32>, Vector3<f32>, Vector3<f32>, f32),
     // Position
     RightCorner(Vector3<f32>),
-    UCorner(Vector3<f32>),
+    // Position, rotation
+    UCorner(Vector3<f32>, f32),
 }
 
 enum SegmentObject<'a> {
     Straight(TexturedSquare<'a>, Vector3<f32>, FacingDirection, f32),
     RightCorner(TrackCorner<'a>, Vector3<f32>),
-    UCorner(TrackCorner<'a>, Vector3<f32>),
+    UCorner(TrackCorner<'a>, Vector3<f32>, f32),
 }
 
 pub struct TrackSegment<'a> {
@@ -41,13 +40,13 @@ impl<'a> TrackSegment<'a> {
         use SegmentType::*;
         let segment_object = match segment_type {
             Straight(pos, direction, length) => {
-                SegmentObject::Straight(TexturedSquare::new(gl, TRACK_STRAIGHT_LENGTH, length, FacingDirection::North), pos, direction, length)
+                SegmentObject::Straight(TexturedSquare::new(gl, TRACK_WIDTH, length, FacingDirection::North), pos, direction, length)
             }
             RightCorner(pos) => {
                 SegmentObject::RightCorner(TrackCorner::new(gl, TrackCornerType::Right), pos)
             }
-            UCorner(pos) => {
-                SegmentObject::UCorner(TrackCorner::new(gl, TrackCornerType::UTurn), pos)
+            UCorner(pos, rot) => {
+                SegmentObject::UCorner(TrackCorner::new(gl, TrackCornerType::UTurn), pos, rot)
             }
         };
 
@@ -105,32 +104,15 @@ impl<'a> GameObject<'a> for TrackSegment<'a> {
                 if matches!(dir, FacingDirection::West) {
                     model_matrix.add_rotation(0.0, 90f32.to_radians(), 0.0);
                 }
-                model_matrix.add_scale(TRACK_STRAIGHT_LENGTH + 5.0, TRACK_ELEVATION, *length);
+                model_matrix.add_scale(TRACK_WIDTH + 5.0, TRACK_ELEVATION, *length);
                 game.shader.set_model_matrix(model_matrix.matrix.as_slice());
                 game.cube.draw(&game.shader);
                 model_matrix.pop_stack();
             }
-            /*Corner(object, enter, control, exit) => {
-                let center = (0.5 * enter + 0.5 * exit) + 0.5 * control;
-                let size = ((enter - exit).abs() - control).abs();
-                
-                model_matrix.push_stack();
-                model_matrix.add_translate(0.0, TRACK_ELEVATION + 0.1, 0.0);
-                game.shader.set_model_matrix(model_matrix.matrix.as_slice());
-                object.draw(&game.shader, &self.road_texture);
-                model_matrix.pop_stack();
-
-                model_matrix.push_stack();
-                model_matrix.add_translate(center.x, center.y + TRACK_ELEVATION / 2.0, center.z);
-                model_matrix.add_scale(size.x, TRACK_ELEVATION, size.z);
-                game.shader.set_model_matrix(model_matrix.matrix.as_slice());
-                game.cube.draw(&game.shader);
-                model_matrix.pop_stack();
-            }*/
             RightCorner(object, pos) => {
                 model_matrix.push_stack();
                 model_matrix.add_translate(pos.x, TRACK_ELEVATION + 0.1, pos.z);
-                model_matrix.add_scale(100.0, 1.0, 100.0);
+                model_matrix.add_scale(TRACK_WIDTH * 10.0, 1.0, TRACK_WIDTH * 10.0);
                 model_matrix.add_rotation(0.0, 270f32.to_radians(), 0.0);
                 game.shader.set_model_matrix(model_matrix.matrix.as_slice());
                 object.draw(&game.shader, &self.road_texture);
@@ -143,11 +125,11 @@ impl<'a> GameObject<'a> for TrackSegment<'a> {
                 game.cube.draw(&game.shader);
                 model_matrix.pop_stack();*/
             }
-            UCorner(object, pos) => {
+            UCorner(object, pos, rot) => {
                 model_matrix.push_stack();
                 model_matrix.add_translate(pos.x, TRACK_ELEVATION + 0.1, pos.z);
-                model_matrix.add_scale(100.0, 1.0, 100.0);
-                model_matrix.add_rotation(0.0, 270f32.to_radians(), 0.0);
+                model_matrix.add_scale(TRACK_WIDTH * 10.0, 1.0,  TRACK_WIDTH * 10.0);
+                model_matrix.add_rotation(0.0, *rot, 0.0);
                 game.shader.set_model_matrix(model_matrix.matrix.as_slice());
                 object.draw(&game.shader, &self.road_texture);
                 model_matrix.pop_stack();

@@ -149,22 +149,3 @@ impl CarState {
     }
 }
 
-/*
-pub fn accelerate_time_step(
-    car_pos: &Vector3<f32>,
-    car_velocity: &Vector3<f32>,
-    car_heading: &Vector3<f32>,
-    delta_time: f32,
-) -> (Vector3<f32>, Vector3<f32>) {
-    let traction = car_heading * ENGINE_FORCE;
-    let drag = -DRAG_FORCE * car_velocity * car_velocity.norm();
-    let rolling_resitance = -ROLLING_RESISTANCE * car_velocity;
-    let long_force = traction + drag + rolling_resitance;
-
-    let acceleration = long_force / CAR_MASS;
-    let velocity = car_velocity + delta_time * acceleration;
-    let position = car_pos + delta_time * velocity;
-
-    (position, velocity)
-}
-*/

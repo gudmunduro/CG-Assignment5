@@ -23,13 +23,20 @@ impl<'a> TrackCorner<'a> {
         gl: &'a Context,
         corner_type: TrackCornerType
     ) -> TrackCorner {
-        let (enter, control, exit) = (
-            Vector3::new(-0.5, 0.0, 0.0),
-            Vector3::new(0.0, 0.0, 0.0),
-            Vector3::new(0.0, 0.0, -0.5),
-        );
-        let track_width = 0.1;
         use TrackCornerType::*;
+        let (enter, control, exit) = match corner_type {
+            UTurn => (
+                Vector3::new(-0.25, 0.0, 0.0),
+                Vector3::new(0.0, 0.0, 0.5),
+                Vector3::new(0.25, 0.0, 0.0),
+            ),
+            Right => (
+                Vector3::new(-0.5, 0.0, 0.0),
+                Vector3::new(0.0, 0.0, 0.0),
+                Vector3::new(0.0, 0.0, -0.5),
+            ),
+        };
+        let track_width = 0.1;
         let pb = match corner_type {
             UTurn => 0.5 * enter + 0.5 * exit,
             Right => Vector3::new(enter.x, 0.0, exit.z),
