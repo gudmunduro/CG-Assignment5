@@ -19,9 +19,10 @@ impl<'a> Car<'a> {
     pub fn new(gl: &'a Context, game: &Game) -> Car<'a> {
         let car_model = load_obj_file("./models", "car.obj", gl, game).expect("Failed to load car model");
         let wheel_model = load_obj_file("./models", "wheel.obj", gl, game).expect("Failed to load wheel model");
-        // let tex_id = game.load_texture("./models/textures/Ferrari_246_F1_Low_Car_BaseColor.png");
+        let mut car_state = CarState::new();
+        car_state.position_wc.y = 10.0;
 
-        Car { car_model, wheel_model, throttle_state: false, car_state: CarState::new(), y_velocity: 0.0, handbrake: false }
+        Car { car_model, wheel_model, throttle_state: false, car_state, y_velocity: 0.0, handbrake: false }
     }
 
     fn check_collision(&mut self, game: &Game) {

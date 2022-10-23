@@ -1,4 +1,4 @@
 pub mod cube;
 pub mod mesh_model;
-pub mod textured_cube;
-pub mod textured_corner;
+pub mod textured_square;
+pub mod track_corner;

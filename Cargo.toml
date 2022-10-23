@@ -10,3 +10,4 @@ glow = { git = "https://github.com/gudmunduro/glow.git", branch = "main"}
 sdl2 = { version = "0.35.2", features = ["image"] }
 nalgebra = "0.31.2"
 anyhow = "1.0.65"
+itertools = "0.10.5"

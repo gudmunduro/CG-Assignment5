@@ -3,7 +3,7 @@ use std::{time::Instant, cell::RefCell, path::Path, slice};
 use crate::{core::{
     matrices::{ModelMatrix, ProjectionMatrix, ViewMatrix},
     shader::Shader3D,
-}, objects::cube::Cube, game_objects::{car::Car, freecam_controller::FreecamController, ground::Ground, road_surface::RoadSurface, track::Track}};
+}, objects::cube::Cube, game_objects::{car::Car, freecam_controller::FreecamController, ground::Ground, track_segment::TrackSegment, track::Track}};
 use glow::*;
 use sdl2::{
     image::ImageRWops,
@@ -44,7 +44,7 @@ impl<'a> Game<'a> {
 
         shader.use_program();
         shader.set_view_matrix(view_matrix.get_matrix().as_slice());
-        projection_matrix.set_perspective(60.0, W_WIDTH as f32 / W_HEIGHT as f32, 0.5, 80.0);
+        projection_matrix.set_perspective(60.0, W_WIDTH as f32 / W_HEIGHT as f32, 0.5, 300.0);
         shader.set_projection_matrix(projection_matrix.get_matrix().as_slice());
 
         Game {
@@ -65,9 +65,9 @@ impl<'a> Game<'a> {
 
     pub fn create_scene(&mut self) {
         self.add_game_object(Car::new(self.gl, self));
-        self.add_game_object(Ground::new());
-        // self.add_game_object(FreecamController::new(self.gl));
         self.add_game_object(Track::new(self.gl, self));
+        self.add_game_object(Ground::new(self.gl, self));
+        // self.add_game_object(FreecamController::new(self.gl));
     }
 
     #[inline(always)]

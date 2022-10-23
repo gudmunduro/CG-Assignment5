@@ -69,15 +69,8 @@ impl<'a> MeshModel<'a> {
             shader.set_render_texture(true);
 
             // Texture
-            if let Some(texture) = material.texture {
-                unsafe {
-                    self.gl.bind_texture(TEXTURE_2D, Some(texture));
-                }
-            }
-            else {
-                unsafe {
-                    self.gl.bind_texture(TEXTURE_2D, None);
-                }
+            unsafe {
+                self.gl.bind_texture(TEXTURE_2D, material.texture);
             }
 
             unsafe {
