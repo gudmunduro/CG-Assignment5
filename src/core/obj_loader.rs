@@ -64,7 +64,7 @@ pub fn load_mtl_file(
                 }
 
                 println!("Material {}", tokens[1]);
-                mtl = Some(Material::new(None, None, None, None, None, None));
+                mtl = Some(Material::new(None, None, None, None, None, None, None));
                 mtl_name = Some(tokens[1].to_string());
             }
             "Ka" => {
@@ -91,6 +91,9 @@ pub fn load_mtl_file(
             }
             "Ns" => {
                 mtl.as_mut().unwrap().shininess = tokens[1].parse()?;
+            }
+            "d" => {
+                mtl.as_mut().unwrap().alpha = tokens[1].parse().unwrap();
             }
             _ => (),
         }

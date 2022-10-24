@@ -26,14 +26,14 @@ impl<'a> TrackCorner<'a> {
         use TrackCornerType::*;
         let (enter, control, exit) = match corner_type {
             UTurn => (
-                Vector3::new(-0.25, 0.0, 0.0),
-                Vector3::new(0.0, 0.0, 0.5),
-                Vector3::new(0.25, 0.0, 0.0),
+                Vector3::new(-0.25, -0.0001, 0.0),
+                Vector3::new(0.0, -0.0001, 0.5),
+                Vector3::new(0.25, -0.0001, 0.0),
             ),
             Right => (
-                Vector3::new(-0.5, 0.0, 0.0),
-                Vector3::new(0.0, 0.0, 0.0),
-                Vector3::new(0.0, 0.0, -0.5),
+                Vector3::new(-0.5, -0.0002, 0.0),
+                Vector3::new(0.0, -0.0002, 0.0),
+                Vector3::new(0.0, -0.0002, -0.5),
             ),
         };
         let track_width = 0.1;

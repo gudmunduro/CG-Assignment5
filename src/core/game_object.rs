@@ -5,7 +5,9 @@ use super::game::Game;
 
 pub enum CollisionInfo {
     NoCollision,
-    YCollision(f32)
+    YCollision(f32),
+    // minX, minY, minZ, maxX, maxY, maxZ
+    BoxCollision(f32, f32, f32, f32, f32, f32)
 }
 
 pub trait GameObject<'a> {

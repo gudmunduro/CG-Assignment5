@@ -110,9 +110,11 @@ impl<'a> Game<'a> {
     pub fn display(&mut self) {
         unsafe {
             self.gl.enable(DEPTH_TEST);
+            self.gl.enable(BLEND);
+            self.gl.blend_func(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
             self.gl.clear_color(0.03, 0.04, 0.13, 1.0);
             self.gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
-            self.gl.viewport(0, 0, W_WIDTH as i32, W_HEIGHT as i32);
+            self.gl.viewport(0, 0, self.window.size().0 as i32, self.window.size().1 as i32);
         }
 
         let view_matrix = self.view_matrix.get_mut();

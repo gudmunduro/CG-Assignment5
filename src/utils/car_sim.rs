@@ -1,4 +1,4 @@
-use std::num;
+use std::f32;
 
 use nalgebra::Vector3;
 
@@ -18,7 +18,7 @@ const CAR_MASS: f32 = 1500.0;
 const CAR_INERTIA: f32 = 1500.0;
 const CAR_WIDTH: f32 = 1.5;
 const CAR_LENGTH: f32 = 3.0;
-const CAR_WHEEL_LENGTH: f32 = 0.7;
+const CAR_WHEEL_LENGTH: f32 = 1.4;
 const CAR_WHEEL_WIDTH: f32 = 0.3;
 
 const GRAVITY: f32 = 9.8;
@@ -31,6 +31,7 @@ pub struct CarState {
     pub steering_angle: f32,
     pub throttle: f32,
     pub brake: f32,
+    pub wheel_rotation_speed: f32,
 }
 
 impl CarState {
@@ -43,6 +44,7 @@ impl CarState {
             steering_angle: 0.0,
             throttle: 0.0,
             brake: 0.0,
+            wheel_rotation_speed: 0.0
         }
     }
 
@@ -106,6 +108,8 @@ impl CarState {
             0.0,
             0.0,
         );
+        self.wheel_rotation_speed = ((traction_force.x * delta_time) / CAR_WHEEL_LENGTH) * 2.0 * f32::consts::PI;
+
         if rear_slip {
             traction_force.x *= 0.5;
         }

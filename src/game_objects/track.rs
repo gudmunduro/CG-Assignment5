@@ -23,9 +23,12 @@ impl<'a> Track<'a> {
         track.push(TrackSegment::new(SegmentType::Straight(Vector3::new(0.0, 0.0, 66.0), FacingDirection::North, 240.0), gl, game));
         track.push(TrackSegment::new(SegmentType::RightCorner(Vector3::new(-10.0, 0.0, 285.0)), gl, game));
         track.push(TrackSegment::new(SegmentType::Straight(Vector3::new(186.0, 0.0, 275.0), FacingDirection::West, 200.0), gl, game));
-        track.push(TrackSegment::new(SegmentType::UCorner(Vector3::new(287.0, 0.0, 235.0), 90f32.to_radians()), gl, game));
-        track.push(TrackSegment::new(SegmentType::UCorner(Vector3::new(293.3, 0.0, 159.0), 270f32.to_radians()), gl, game));
-        track.push(TrackSegment::new(SegmentType::UCorner(Vector3::new(293.0, 0.0, 79.0), 90f32.to_radians()), gl, game));
+        // S
+        track.push(TrackSegment::new(SegmentType::UCorner(Vector3::new(286.0, 0.0, 235.0), 90f32.to_radians()), gl, game));
+        track.push(TrackSegment::new(SegmentType::UCorner(Vector3::new(292.3, 0.0, 159.0), 270f32.to_radians()), gl, game));
+        track.push(TrackSegment::new(SegmentType::UCorner(Vector3::new(292.0, 0.0, 79.0), 90f32.to_radians()), gl, game));
+
+        // Track end
         track.push(TrackSegment::new(SegmentType::Straight(Vector3::new(226.0, 0.0, 40.0), FacingDirection::West, 140.0), gl, game));
         track.push(TrackSegment::new(SegmentType::RightCorner(Vector3::new(67.0, 0.0, 50.0)), gl, game));
         track.push(TrackSegment::new(SegmentType::UCorner(Vector3::new(37.0, 0.0, -49.0), 180f32.to_radians()), gl, game));

@@ -259,26 +259,26 @@ impl<'a> Shader3D<'a> {
     }
 
     pub fn set_material_diffuse(&self, color: &Color) {
-        let Color { r, g, b } = color.clone();
+        let Color { r, g, b, a } = color.clone();
         
         unsafe {
-            self.gl.uniform_4_f32(Some(&self.mat_dif_loc), r, g, b, 0.0);
+            self.gl.uniform_4_f32(Some(&self.mat_dif_loc), r, g, b, a);
         }
     }
 
     pub fn set_material_specular(&self, color: &Color) {
-        let Color { r, g, b } = color.clone();
+        let Color { r, g, b, a } = color.clone();
 
         unsafe {
-            self.gl.uniform_4_f32(Some(&self.mat_spec_loc), r, g, b, 0.0);
+            self.gl.uniform_4_f32(Some(&self.mat_spec_loc), r, g, b, a);
         }
     }
 
     pub fn set_material_ambient(&self, color: &Color) {
-        let Color { r, g, b } = color.clone();
+        let Color { r, g, b, a } = color.clone();
 
         unsafe {
-            self.gl.uniform_4_f32(Some(&self.mat_amb_loc), r, g, b, 0.0);
+            self.gl.uniform_4_f32(Some(&self.mat_amb_loc), r, g, b, a);
         }
     }
 

@@ -61,9 +61,9 @@ impl<'a> MeshModel<'a> {
     pub fn draw(&self, shader: &Shader3D) {
         for (mesh_id, mesh_material) in &self.mesh_materials {
             let material = &self.materials[mesh_material];
-            shader.set_material_diffuse(&material.diffuse);
+            shader.set_material_diffuse(&material.diffuse());
             shader.set_material_specular(&material.specular);
-            shader.set_material_ambient(&material.ambient);
+            shader.set_material_ambient(&material.ambient());
             shader.set_shininess(material.shininess);
             shader.set_attribute_buffers(&self.vertex_buffer_ids[mesh_id]);
             shader.set_diffuse_texture_active(material.diffuse_texture.is_some());
