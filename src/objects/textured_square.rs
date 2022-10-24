@@ -15,18 +15,18 @@ pub struct TexturedSquare<'a> {
 
 impl<'a> TexturedSquare<'a> {
     pub fn new(gl: &'a Context, width: f32, height: f32, texture_dir: FacingDirection) -> TexturedSquare {
-        let width_segment_count = (width as i32 / MAX_SIZE as i32).max(2);
-        let height_segment_count = (height as i32 / MAX_SIZE as i32).max(2);
+        let width_segment_count = ((width / MAX_SIZE).ceil() as i32).max(1);
+        let height_segment_count = ((height / MAX_SIZE).ceil() as i32).max(1);
         let width_remaining_size = width % MAX_SIZE;
         let height_remaining_size = height % MAX_SIZE;
         let x_start = -width / 2.0;
         let y_start = -height / 2.0;
 
         // Split the square into segments, no larger than MAX_SIZE, to make lighting and (repeating) textures work better
-        let position_array: Vec<f32> = (0..width_segment_count)
+        let position_array: Vec<f32> = (0..=width_segment_count)
             .tuple_windows()
             .flat_map(|(i, i2)| {
-                (0..height_segment_count)
+                (0..=height_segment_count)
                     .tuple_windows()
                     .flat_map(move |(j, j2)| {
                         let x_min = x_start + i as f32 * MAX_SIZE;

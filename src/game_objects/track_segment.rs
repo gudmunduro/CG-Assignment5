@@ -79,12 +79,12 @@ impl<'a> GameObject<'a> for TrackSegment<'a> {
                 use FacingDirection::*;
                 match dir {
                     North => {
-                        model_matrix.add_translate(pos.x, pos.y + TRACK_ELEVATION + 0.1, pos.z + pos.z * 0.09);
-                        model_matrix.add_scale(1.0, 1.0, 1.09);
+                        model_matrix.add_translate(pos.x, pos.y + TRACK_ELEVATION + 0.1, pos.z);
+                        model_matrix.add_scale(1.0, 1.0, 1.0);
                     }
                     West => {
-                        model_matrix.add_translate(pos.x + pos.x * 0.07, pos.y + TRACK_ELEVATION + 0.1, pos.z);
-                        model_matrix.add_scale(1.11, 1.0, 1.0);
+                        model_matrix.add_translate(pos.x, pos.y + TRACK_ELEVATION + 0.1, pos.z);
+                        model_matrix.add_scale(1.0, 1.0, 1.0);
                         model_matrix.add_rotation(0.0, 90f32.to_radians(), 0.0);    
                     }
                 }
