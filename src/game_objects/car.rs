@@ -1,7 +1,7 @@
 use std::f32;
 
 use glow::*;
-use nalgebra::Vector3;
+use nalgebra::{Vector3, Vector4};
 use sdl2::{event::Event, keyboard::Keycode};
 
 use crate::{
@@ -39,7 +39,7 @@ impl<'a> Car<'a> {
         let wheel_model =
             load_obj_file("./models", "wheel2.obj", gl, game).expect("Failed to load wheel model");
         let mut car_state = CarState::new();
-        car_state.position_wc.y = 30.0;
+        car_state.position_wc.y = 40.0;
 
         Car {
             car_model,
@@ -53,48 +53,88 @@ impl<'a> Car<'a> {
         }
     }
 
-    fn check_collision(&mut self, game: &Game) {
-        for object in &game.game_objects {
-            if self as *const _ as *const usize == object.as_ptr() as *const _ as *const usize {
-                continue;
-            }
+    fn car_cube(&self, game: &Game) -> (f32, f32, f32, f32, f32, f32) {
+        let mut model_matrix = game.model_matrix.borrow_mut();
 
-            use CollisionInfo::*;
-            match object.borrow().collision_info() {
-                YCollision(y) => {
-                    if self.car_state.position_wc.y <= y {
-                        self.car_state.position_wc.y = y;
-                        self.y_velocity = 0.0;
-                    }
+        model_matrix.push_stack();
+        model_matrix.add_translate(self.car_state.position_wc.x, self.car_state.position_wc.y, self.car_state.position_wc.z);
+        model_matrix.add_rotation(0.0, self.car_state.angle, 0.0);
+        model_matrix.add_scale(5.0, 3.0, 10.0);
+        
+        let local_max = Vector4::new(0.5, 0.5, 0.5, 1.0);
+        let local_min = Vector4::new(-0.5, -0.5, -0.5, 1.0);
+
+        let max =  model_matrix.matrix * local_max;
+        let min = model_matrix.matrix * local_min;
+
+        model_matrix.pop_stack();
+
+        return (min.x.min(max.x), min.y.min(max.y), min.z.min(max.z), max.x.max(min.x), max.y.max(min.y), max.z.max(min.z));
+    }
+
+    fn check_collision(&mut self, info: &CollisionInfo, game: &Game) {
+        use CollisionInfo::*;
+        match info {
+            &YCollision(y) => {
+                let (_, c_min_y, ..) = self.car_cube(game);
+                if c_min_y <= y {
+                    self.car_state.position_wc.y = y + 1.5;
+                    self.y_velocity = 0.0;
                 }
-                BoxCollision(min_x, min_y, min_z, max_x, max_y, max_z) => {
+            }
+            &BoxCollision(min_x, min_y, min_z, max_x, max_y, max_z) => {
+                let (c_min_x, c_min_y, c_min_z, c_max_x, c_max_y, c_max_z) = self.car_cube(game);
+
+                let perform_collision_detect = c_min_x <= max_x &&
+                    c_max_x >= min_x &&
+                    c_min_y <= max_y &&
+                    c_max_y >= min_y &&
+                    c_min_z <= max_z &&
+                    c_max_z >= min_z;
+
+                if perform_collision_detect {
                     let mut closest_x = self.car_state.position_wc.x;
                     if self.car_state.position_wc.x > max_x {
-                        closest_x = max_x + 1.0;
+                        closest_x = max_x + 2.5;
                     } else if self.car_state.position_wc.x < min_x {
-                        closest_x = min_x - 1.0;
+                        closest_x = min_x - 2.5;
                     }
 
                     let mut closest_y = self.car_state.position_wc.y;
                     if self.car_state.position_wc.y > max_y {
-                        closest_y = max_y + 1.0;
+                        self.y_velocity = 0.0;
+                        closest_y = max_y + 1.5;
+                        // println!("Collided with y");
                     } else if self.car_state.position_wc.y < min_y {
-                        closest_y = min_y - 1.0;
+                        self.y_velocity = -1.0;
+                        closest_y = min_y - 1.5;
+                        // println!("Collided with -y");
                     }
 
                     let mut closest_z = self.car_state.position_wc.z;
                     if self.car_state.position_wc.z > max_z {
-                        closest_z = max_z + 1.0;
+                        closest_z = max_z + 5.0;
                     } else if self.car_state.position_wc.z < min_z {
-                        closest_z = min_z - 1.0;
+                        closest_z = min_z - 5.0;
                     }
 
                     self.car_state.position_wc.x = closest_x;
                     self.car_state.position_wc.y = closest_y;
                     self.car_state.position_wc.z = closest_z;
                 }
-                NoCollision => (),
             }
+            MultiCollision(c) => c.iter().for_each(|info| self.check_collision(&info, game)),
+            NoCollision => (),
+        }
+    }
+
+    fn check_all_collision(&mut self, game: &Game) {
+        for object in &game.game_objects {
+            if self as *const _ as *const usize == object.as_ptr() as *const _ as *const usize {
+                continue;
+            }
+
+            self.check_collision(&object.borrow().collision_info(), game);
         }
     }
 
@@ -166,8 +206,9 @@ impl<'a> GameObject<'a> for Car<'a> {
                 } else {
                     ViewState::ThirdPerson
                 };
-
-                self.car_state.position_wc.y = 50.0;
+            }
+            Event::KeyDown { keycode: Some(Keycode::L), .. } => {
+                self.y_velocity = 20.0;
             }
             _ => (),
         }
@@ -187,16 +228,16 @@ impl<'a> GameObject<'a> for Car<'a> {
         }
 
         self.update_gravity(game);
-        self.check_collision(game);
+        self.check_all_collision(game);
 
         // Update camera pos
         use ViewState::*;
         let eye = match self.view_state {
             FirstPerson => {
-                self.car_state.position_wc + Vector3::new(ang_sin * -1.8, 3.2, ang_cos * -1.8)
+                self.car_state.position_wc + Vector3::new(ang_sin * -1.8, 1.2, ang_cos * -1.8)
             }
             ThirdPerson => {
-                self.car_state.position_wc + Vector3::new(ang_sin * -20.0, 8.0, ang_cos * -20.0)
+                self.car_state.position_wc + Vector3::new(ang_sin * -20.0, 6.0, ang_cos * -20.0)
             }
         };
         let center = eye + Vector3::new(ang_sin * LOOK_DIST, 0.0, ang_cos * LOOK_DIST);
@@ -221,7 +262,7 @@ impl<'a> GameObject<'a> for Car<'a> {
 
         // Front wheels
         model_matrix.push_stack();
-        model_matrix.add_translate(0.4, 0.2, 0.8);
+        model_matrix.add_translate(0.4, -0.1, 0.8);
         model_matrix.add_rotation(
             0.0,
             90.0f32.to_radians() + self.car_state.steering_angle,
@@ -232,7 +273,7 @@ impl<'a> GameObject<'a> for Car<'a> {
         model_matrix.pop_stack();
 
         model_matrix.push_stack();
-        model_matrix.add_translate(-0.4, 0.2, 0.8);
+        model_matrix.add_translate(-0.4, -0.1, 0.8);
         model_matrix.add_rotation(
             0.0,
             -90.0f32.to_radians() + self.car_state.steering_angle,
@@ -244,14 +285,14 @@ impl<'a> GameObject<'a> for Car<'a> {
 
         // Rear wheels
         model_matrix.push_stack();
-        model_matrix.add_translate(0.4, 0.25, -0.6);
+        model_matrix.add_translate(0.4, -0.1, -0.6);
         model_matrix.add_rotation(self.wheel_rotation, 90.0f32.to_radians(), 0.0);
         game.shader.set_model_matrix(model_matrix.matrix.as_slice());
         self.wheel_model.draw(&game.shader);
         model_matrix.pop_stack();
 
         model_matrix.push_stack();
-        model_matrix.add_translate(-0.4, 0.25, -0.6);
+        model_matrix.add_translate(-0.4, -0.1, -0.6);
         model_matrix.add_rotation(self.wheel_rotation, -90.0f32.to_radians(), 0.0);
         game.shader.set_model_matrix(model_matrix.matrix.as_slice());
         self.wheel_model.draw(&game.shader);

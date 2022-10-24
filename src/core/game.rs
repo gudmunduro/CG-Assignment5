@@ -64,9 +64,9 @@ impl<'a> Game<'a> {
     }
 
     pub fn create_scene(&mut self) {
-        self.add_game_object(Car::new(self.gl, self));
         self.add_game_object(Track::new(self.gl, self));
         self.add_game_object(Ground::new(self.gl, self));
+        self.add_game_object(Car::new(self.gl, self));
         // self.add_game_object(FreecamController::new(self.gl));
     }
 

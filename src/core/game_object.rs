@@ -3,11 +3,13 @@ use sdl2::event::Event;
 
 use super::game::Game;
 
+#[derive(Clone)]
 pub enum CollisionInfo {
     NoCollision,
     YCollision(f32),
     // minX, minY, minZ, maxX, maxY, maxZ
-    BoxCollision(f32, f32, f32, f32, f32, f32)
+    BoxCollision(f32, f32, f32, f32, f32, f32),
+    MultiCollision(Vec<CollisionInfo>),
 }
 
 pub trait GameObject<'a> {

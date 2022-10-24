@@ -41,7 +41,7 @@ impl<'a> Track<'a> {
 impl<'a> GameObject<'a> for Track<'a> {
 
     fn collision_info(&self) -> CollisionInfo {
-        CollisionInfo::YCollision(0.0)
+        CollisionInfo::MultiCollision(self.track.iter().map(|s| s.collision_info()).collect())
     }
 
     fn on_event(&mut self, game: &Game, event: &sdl2::event::Event) {

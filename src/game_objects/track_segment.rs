@@ -77,6 +77,14 @@ impl<'a> GameObject<'a> for TrackSegment<'a> {
                 pos.y + TRACK_ELEVATION,
                 pos.z + length / 2.0,
             ),
+            RightCorner(_, pos)  => CollisionInfo::BoxCollision(
+                pos.x - (TRACK_WIDTH + 5.0) / 2.0,
+                pos.y + TRACK_ELEVATION - TRACK_BOX_HEIGHT,
+                pos.z - length / 2.0,
+                pos.x + (TRACK_WIDTH + 5.0) / 2.0,
+                pos.y + TRACK_ELEVATION,
+                pos.z + length / 2.0,
+            ),
             _ => CollisionInfo::NoCollision,
         }
     }
