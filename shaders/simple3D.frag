@@ -7,8 +7,10 @@ uniform vec4 u_material_diffuse;
 uniform vec4 u_material_specular;
 uniform vec4 u_material_ambient;
 uniform float u_material_shininess;
-uniform sampler2D texture;
-uniform bool u_render_texture;
+uniform sampler2D u_texture_diffuse;
+uniform sampler2D u_texture_specular;
+uniform bool u_diffuse_active;
+uniform bool u_specular_active;
 
 varying vec4 s[LIGHT_COUNT];
 varying vec4 v;
@@ -20,16 +22,18 @@ void main(void)
 	vec4 global_ambient = vec4(0.4, 0.4, 0.4, 1.0);
 	vec4 light_calculated_color = vec4(0.0, 0.0, 0.0, 0.0);
 
-	vec4 texture = u_render_texture ? texture2D(texture, v_uv) : vec4(1, 1, 1, 1);
-	vec4 ambient_material = u_material_ambient * texture;
-	vec4 diffuse_material = u_material_diffuse * texture;
+	vec4 diffuse_texture = u_diffuse_active ? texture2D(u_texture_diffuse, v_uv) : vec4(1, 1, 1, 1);
+	vec4 specular_texture = u_specular_active ? texture2D(u_texture_specular, v_uv) : vec4(1, 1, 1, 1);
+	vec4 ambient_material = u_material_ambient * diffuse_texture;
+	vec4 diffuse_material = u_material_diffuse * diffuse_texture;
+	vec4 specular_material = u_material_specular * specular_texture;
 	for (int i = 0; i < LIGHT_COUNT; i++) {
 		vec4 h = normalize(s[i] + v);
     	float lambert = max(0.0, dot(normal, s[i]) / (length(normal) * length(s[i])));
 		float phong = max(0.0, dot(normal, h) / length(normal) * length(h));
 		vec4 ambient_color = u_light_ambient[i] * ambient_material;
 		vec4 diffuse_color = u_light_diffuse[i] * diffuse_material * lambert;
-		vec4 specular_color = u_light_specular[i] * u_material_specular * pow(phong, u_material_shininess);
+		vec4 specular_color = u_light_specular[i] * specular_material * pow(phong, u_material_shininess);
 		light_calculated_color += ambient_color + diffuse_color + specular_color;
 	}
 

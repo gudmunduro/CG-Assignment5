@@ -64,7 +64,7 @@ pub fn load_mtl_file(
                 }
 
                 println!("Material {}", tokens[1]);
-                mtl = Some(Material::new(None, None, None, None, None));
+                mtl = Some(Material::new(None, None, None, None, None, None));
                 mtl_name = Some(tokens[1].to_string());
             }
             "Ka" => {
@@ -78,7 +78,12 @@ pub fn load_mtl_file(
             "map_Kd" => {
                 let texture_name = tokens[1];
                 let tex_id = game.load_texture(texture_name, false);
-                mtl.as_mut().unwrap().texture = Some(tex_id);
+                mtl.as_mut().unwrap().diffuse_texture = Some(tex_id);
+            }
+            "map_Ks" => {
+                let texture_name = tokens[1];
+                let tex_id = game.load_texture(texture_name, false);
+                mtl.as_mut().unwrap().specular_texture = Some(tex_id);
             }
             "Ks" => {
                 mtl.as_mut().unwrap().specular =

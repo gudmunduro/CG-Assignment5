@@ -22,7 +22,10 @@ pub struct Shader3D<'a> {
     mat_spec_loc: NativeUniformLocation,
     mat_amb_loc: NativeUniformLocation,
     mat_shine_loc: NativeUniformLocation,
-    render_texture_loc: NativeUniformLocation,
+    diffuse_texture_active_loc: NativeUniformLocation,
+    specular_texture_active_loc: NativeUniformLocation,
+    diffuse_texture_loc: NativeUniformLocation,
+    specular_texture_loc: NativeUniformLocation,
 }
 
 impl<'a> Shader3D<'a> {
@@ -104,8 +107,17 @@ impl<'a> Shader3D<'a> {
             let mat_shine_loc = gl
                 .get_uniform_location(rendering_program_id, "u_material_shininess")
                 .unwrap();
-            let render_texture_loc = gl
-                .get_uniform_location(rendering_program_id, "u_render_texture")
+            let diffuse_texture_active_loc = gl
+                .get_uniform_location(rendering_program_id, "u_diffuse_active")
+                .unwrap();
+            let specular_texture_active_loc = gl
+                .get_uniform_location(rendering_program_id, "u_specular_active")
+                .unwrap();
+            let diffuse_texture_loc = gl
+                .get_uniform_location(rendering_program_id, "u_texture_diffuse")
+                .unwrap();
+            let specular_texture_loc = gl
+                .get_uniform_location(rendering_program_id, "u_texture_specular")
                 .unwrap();
 
             Shader3D {
@@ -126,7 +138,10 @@ impl<'a> Shader3D<'a> {
                 mat_spec_loc,
                 mat_amb_loc,
                 mat_shine_loc,
-                render_texture_loc,
+                diffuse_texture_active_loc,
+                specular_texture_active_loc,
+                diffuse_texture_loc,
+                specular_texture_loc,
             }
         }
     }
@@ -273,9 +288,27 @@ impl<'a> Shader3D<'a> {
         }
     }
 
-    pub fn set_render_texture(&self, value: bool) {
+    pub fn set_diffuse_texture_active(&self, value: bool) {
         unsafe {
-            self.gl.uniform_1_u32(Some(&self.render_texture_loc), value as u32);
+            self.gl.uniform_1_u32(Some(&self.diffuse_texture_active_loc), value as u32);
+        }
+    }
+
+    pub fn set_specular_texture_active(&self, value: bool) {
+        unsafe {
+            self.gl.uniform_1_u32(Some(&self.specular_texture_active_loc), value as u32);
+        }
+    }
+
+    pub fn set_diffuse_texture(&self, value: u32) {
+        unsafe {
+            self.gl.uniform_1_u32(Some(&self.diffuse_texture_loc), value);
+        }
+    }
+
+    pub fn set_specular_texture(&self, value: u32) {
+        unsafe {
+            self.gl.uniform_1_u32(Some(&self.specular_texture_loc), value);
         }
     }
 }

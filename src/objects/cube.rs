@@ -81,7 +81,8 @@ impl<'a> Cube<'a> {
 
     pub fn draw(&self, shader: &Shader3D) {
         shader.set_attribute_buffers(&self.buffer);
-        shader.set_render_texture(false);
+        shader.set_diffuse_texture_active(false);
+        shader.set_specular_texture_active(false);
         
         unsafe {
             self.gl.bind_texture(TEXTURE_2D, None);

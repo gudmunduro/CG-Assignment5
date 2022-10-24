@@ -8,7 +8,8 @@ pub struct Material {
     pub diffuse: Color,
     pub specular: Color,
     pub shininess: f32,
-    pub texture: Option<NativeTexture>,
+    pub diffuse_texture: Option<NativeTexture>,
+    pub specular_texture: Option<NativeTexture>
 }
 
 impl Material {
@@ -17,14 +18,16 @@ impl Material {
         diffuse: Option<Color>,
         specular: Option<Color>,
         shininess: Option<f32>,
-        texture: Option<NativeTexture>
+        diffuse_texture: Option<NativeTexture>,
+        specular_texture: Option<NativeTexture>,
     ) -> Material {
         Material {
             ambient: ambient.unwrap_or(Color::zeros()),
             diffuse: diffuse.unwrap_or(Color::zeros()),
             specular: specular.unwrap_or(Color::zeros()),
             shininess: shininess.unwrap_or(0.0),
-            texture,
+            diffuse_texture,
+            specular_texture,
         }
     }
 }

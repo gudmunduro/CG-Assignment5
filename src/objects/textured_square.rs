@@ -118,10 +118,13 @@ impl<'a> TexturedSquare<'a> {
 
     pub fn draw(&self, shader: &Shader3D, texture: &NativeTexture) {
         shader.set_attribute_buffers(&self.buffer);
-        shader.set_render_texture(true);
+        shader.set_diffuse_texture_active(true);
+        shader.set_specular_texture_active(false);
 
         unsafe {
+            self.gl.active_texture(TEXTURE0);
             self.gl.bind_texture(TEXTURE_2D, Some(texture.clone()));
+            shader.set_diffuse_texture(0);
 
             for i in (0..self.vertex_count).step_by(4) {
                 self.gl.draw_arrays(TRIANGLE_FAN, i as i32, 4);

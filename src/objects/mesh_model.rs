@@ -66,11 +66,18 @@ impl<'a> MeshModel<'a> {
             shader.set_material_ambient(&material.ambient);
             shader.set_shininess(material.shininess);
             shader.set_attribute_buffers(&self.vertex_buffer_ids[mesh_id]);
-            shader.set_render_texture(true);
+            shader.set_diffuse_texture_active(material.diffuse_texture.is_some());
+            shader.set_specular_texture_active(material.specular_texture.is_some());
 
             // Texture
             unsafe {
-                self.gl.bind_texture(TEXTURE_2D, material.texture);
+                self.gl.active_texture(TEXTURE0);
+                self.gl.bind_texture(TEXTURE_2D, material.diffuse_texture);
+                shader.set_diffuse_texture(0);
+
+                self.gl.active_texture(TEXTURE1);
+                self.gl.bind_texture(TEXTURE_2D, material.specular_texture);
+                shader.set_diffuse_texture(1);
             }
 
             unsafe {

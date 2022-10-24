@@ -106,10 +106,13 @@ impl<'a> TrackCorner<'a> {
 
     pub fn draw(&self, shader: &Shader3D, texture: &NativeTexture) {
         shader.set_attribute_buffers(&self.buffer);
-        shader.set_render_texture(true);
+        shader.set_diffuse_texture_active(true);
+        shader.set_specular_texture_active(false);
 
         unsafe {
+            self.gl.active_texture(TEXTURE0);
             self.gl.bind_texture(TEXTURE_2D, Some(*texture));
+            shader.set_diffuse_texture(0);
 
             self.gl.draw_arrays(TRIANGLE_STRIP, 0, LINE_ACCURACY * 2);
         }
