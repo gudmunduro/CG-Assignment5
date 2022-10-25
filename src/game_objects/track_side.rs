@@ -192,7 +192,7 @@ impl<'a> GameObject<'a> for TrackSide {
                     game.cube.draw(&game.shader);
                     model_matrix.pop_stack();
 
-                    if i1 > 3 && i1 < points - 3 && i1 % 4 = 0 {
+                    if i1 > 3 && i1 < points - 3 && i1 % 4 == 0 {
                         let color = if i1 % 8 == 0 {
                             Color::new(1.0, 0.0, 0.0)
                         } else {

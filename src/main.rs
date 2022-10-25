@@ -2,6 +2,7 @@ pub mod core;
 pub mod objects;
 pub mod game_objects;
 pub mod utils;
+pub mod network;
 
 use crate::core::constants::{W_HEIGHT, W_WIDTH};
 
