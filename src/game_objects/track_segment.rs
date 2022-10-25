@@ -1,5 +1,5 @@
 use glow::{Context, NativeTexture};
-use nalgebra::{Vector2, Vector3};
+use nalgebra::{Vector2, Vector3, Vector4};
 
 use crate::{
     core::{
@@ -11,8 +11,10 @@ use crate::{
         textured_square::TexturedSquare,
         track_corner::{TrackCorner, TrackCornerType},
     },
-    utils::FacingDirection,
+    utils::FacingDirection, game_objects::track_side::{Side, self},
 };
+
+use super::track_side::TrackSide;
 
 const TRACK_ELEVATION: f32 = 30.0;
 const TRACK_BOX_HEIGHT: f32 = 5.0;
@@ -33,9 +35,17 @@ enum SegmentObject<'a> {
     UCorner(TrackCorner<'a>, Vector3<f32>, f32),
 }
 
+enum SegmentObjectCollisionInfo {
+    Straight(f32, f32, f32, f32, f32, f32),
+    RightCorner(f32, f32, f32, f32, f32, f32),
+    UCorner(f32, f32, f32, f32, f32, f32),
+}
+
 pub struct TrackSegment<'a> {
     segment_object: SegmentObject<'a>,
     road_texture: NativeTexture,
+    left_side: TrackSide,
+    right_side: TrackSide
 }
 
 impl<'a> TrackSegment<'a> {
@@ -43,50 +53,57 @@ impl<'a> TrackSegment<'a> {
         let road_texture = game.load_texture("./models/textures/road.png", true);
 
         use SegmentType::*;
-        let segment_object = match segment_type {
+        let segment_object = match &segment_type {
             Straight(pos, direction, length) => SegmentObject::Straight(
-                TexturedSquare::new(gl, TRACK_WIDTH, length, FacingDirection::North),
-                pos,
-                direction,
-                length,
+                TexturedSquare::new(gl, TRACK_WIDTH, *length, FacingDirection::North),
+                pos.clone(),
+                direction.clone(),
+                *length,
             ),
             RightCorner(pos) => {
-                SegmentObject::RightCorner(TrackCorner::new(gl, TrackCornerType::Right), pos)
+                SegmentObject::RightCorner(TrackCorner::new(gl, TrackCornerType::Right), pos.clone())
             }
             UCorner(pos, rot) => {
-                SegmentObject::UCorner(TrackCorner::new(gl, TrackCornerType::UTurn), pos, rot)
+                SegmentObject::UCorner(TrackCorner::new(gl, TrackCornerType::UTurn), pos.clone(), *rot)
+            }
+        };
+
+        let (right_side, left_side) = match segment_type {
+            RightCorner(pos) => {
+                let pos = pos + Vector3::new(0.0, TRACK_ELEVATION + 0.5, 0.0);
+
+                (TrackSide::new(pos, 0.0, 20.0, Side::Right, track_side::TrackSegmentSideType::RightCorner), TrackSide::new(pos, 0.0, 20.0, Side::Left, track_side::TrackSegmentSideType::RightCorner))
+            }
+            UCorner(pos, rot) => {
+                let pos = pos + Vector3::new(0.0, TRACK_ELEVATION + 0.5, 0.0);
+
+                (TrackSide::new(pos, rot, 20.0, Side::Right, track_side::TrackSegmentSideType::UTurn), TrackSide::new(pos, rot, 20.0, Side::Left, track_side::TrackSegmentSideType::UTurn))
+            }
+            Straight(pos, direction, length) => {
+                use FacingDirection::*;
+                let rot = match direction {
+                    North => 0.0,
+                    West => 90f32.to_radians()
+                };
+
+                let pos = pos + Vector3::new(0.0, TRACK_ELEVATION + 0.5, 0.0);
+
+                (TrackSide::new(pos, rot, length, Side::Right, track_side::TrackSegmentSideType::Straight), TrackSide::new(pos, rot, length, Side::Left, track_side::TrackSegmentSideType::Straight))
             }
         };
 
         TrackSegment {
             road_texture,
             segment_object,
+            left_side,
+            right_side,
         }
     }
 }
 
 impl<'a> GameObject<'a> for TrackSegment<'a> {
     fn collision_info(&self) -> CollisionInfo {
-        use SegmentObject::*;
-        match &self.segment_object {
-            Straight(_, pos, dir, length) => CollisionInfo::BoxCollision(
-                pos.x - (TRACK_WIDTH + 5.0) / 2.0,
-                pos.y + TRACK_ELEVATION - TRACK_BOX_HEIGHT,
-                pos.z - length / 2.0,
-                pos.x + (TRACK_WIDTH + 5.0) / 2.0,
-                pos.y + TRACK_ELEVATION,
-                pos.z + length / 2.0,
-            ),
-            RightCorner(_, pos)  => CollisionInfo::BoxCollision(
-                pos.x - (TRACK_WIDTH + 5.0) / 2.0,
-                pos.y + TRACK_ELEVATION - TRACK_BOX_HEIGHT,
-                pos.z - length / 2.0,
-                pos.x + (TRACK_WIDTH + 5.0) / 2.0,
-                pos.y + TRACK_ELEVATION,
-                pos.z + length / 2.0,
-            ),
-            _ => CollisionInfo::NoCollision,
-        }
+        CollisionInfo::YCollision(TRACK_ELEVATION)
     }
 
     fn on_event(&mut self, game: &Game, event: &sdl2::event::Event) {}
@@ -94,6 +111,9 @@ impl<'a> GameObject<'a> for TrackSegment<'a> {
     fn update(&mut self, game: &Game, gl: &'a Context) {}
 
     fn display(&self, game: &Game, gl: &'a Context) {
+        self.left_side.display(game, gl);
+        self.right_side.display(game, gl);
+
         let mut model_matrix = game.model_matrix.borrow_mut();
 
         game.shader.set_material_ambient(&Color::new(0.5, 0.5, 0.5));
