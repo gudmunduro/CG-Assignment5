@@ -14,9 +14,7 @@ use crate::{
     utils::car_sim::{self, CarState},
 };
 
-const LOOK_DIST: f32 = 0.9;
-
-enum ViewState {
+pub enum ViewState {
     ThirdPerson,
     FirstPerson,
 }
@@ -142,83 +140,78 @@ impl<'a> Car<'a> {
         self.car_state.position_wc.y += self.y_velocity * game.delta_time;
         self.y_velocity -= 9.8 * 1.7 * game.delta_time;
     }
+
+    pub fn throttle(&self) -> f32 {
+        self.car_state.throttle
+    }
+
+    pub fn set_throttle(&mut self, value: f32) {
+        self.car_state.throttle = value;
+    }
+
+    pub fn brake(&self) -> f32 {
+        self.car_state.brake
+    }
+
+    pub fn set_brake(&mut self, value: f32) {
+        self.car_state.brake = value;
+    }
+
+    pub fn steering_angle(&self) -> f32 {
+        self.car_state.steering_angle
+    }
+
+    pub fn set_steering_angle(&mut self, value: f32) {
+        self.car_state.steering_angle = value;
+    }
+
+    pub fn y_velocity(&self) -> f32 {
+        self.y_velocity
+    }
+
+    pub fn set_y_velocity(&mut self, value: f32) {
+        self.y_velocity = value;
+    }
+
+    pub fn view_state(&self) -> &ViewState {
+        &self.view_state
+    }
+
+    pub fn set_view_state(&mut self, view_state: ViewState) {
+        self.view_state = view_state;
+    }
+
+    pub fn handbrake(&self) -> bool {
+        self.handbrake
+    }
+
+    pub fn set_handbrake(&mut self, value: bool)
+    {
+        self.handbrake = value;
+    }
+
+    pub fn position(&self) -> &Vector3<f32> {
+        &self.car_state.position_wc
+    }
+
+    pub fn set_position(&mut self, position: Vector3<f32>) {
+        self.car_state.position_wc = position;
+    }
+
+    pub fn angle(&self) -> f32 {
+        self.car_state.angle
+    }
+
+    pub fn set_angle(&mut self, value: f32) {
+        self.car_state.angle = value;
+    }
 }
 
 impl<'a> GameObject<'a> for Car<'a> {
     fn on_event(&mut self, game: &Game, event: &Event) {
-        match event {
-            Event::KeyDown {
-                keycode: Some(key @ (Keycode::W | Keycode::S)),
-                ..
-            } => {
-                if *key == Keycode::W {
-                    self.car_state.throttle = 100.0;
-                } else if *key == Keycode::S {
-                    self.car_state.throttle = 0.0;
-                    self.car_state.brake = 100.0;
-                }
-            }
-            Event::KeyUp {
-                keycode: Some(key @ (Keycode::W | Keycode::S)),
-                ..
-            } => {
-                if *key == Keycode::W {
-                    self.car_state.throttle = 0.0;
-                } else if *key == Keycode::S {
-                    self.car_state.brake = 0.0;
-                }
-            }
-            Event::KeyDown {
-                keycode: Some(key @ (Keycode::A | Keycode::D)),
-                ..
-            } => {
-                use Keycode::*;
-                self.car_state.steering_angle = match key {
-                    A => (std::f32::consts::PI / 4.0) * 0.25,
-                    D => (-std::f32::consts::PI / 4.0) * 0.25,
-                    _ => 0.0,
-                };
-            }
-            Event::KeyUp {
-                keycode: Some(Keycode::A | Keycode::D),
-                ..
-            } => {
-                self.car_state.steering_angle = 0.0;
-            }
-            Event::KeyDown {
-                keycode: Some(Keycode::Space),
-                ..
-            } => {
-                self.handbrake = true;
-            }
-            Event::KeyUp {
-                keycode: Some(Keycode::Space),
-                ..
-            } => {
-                self.handbrake = false;
-            }
-            Event::KeyDown {
-                keycode: Some(Keycode::V),
-                ..
-            } => {
-                self.view_state = if matches!(self.view_state, ViewState::ThirdPerson) {
-                    ViewState::FirstPerson
-                } else {
-                    ViewState::ThirdPerson
-                };
-            }
-            Event::KeyDown { keycode: Some(Keycode::L), .. } => {
-                self.y_velocity = 20.0;
-            }
-            _ => (),
-        }
     }
 
     fn update(&mut self, game: &Game, gl: &'a Context) {
-        let mut view_matrix = game.view_matrix.borrow_mut();
-        let ang_sin = self.car_state.angle.sin();
-        let ang_cos = self.car_state.angle.cos();
-
         self.car_state
             .perform_physics_time_step(game.delta_time, self.handbrake, self.handbrake);
 
@@ -230,18 +223,6 @@ impl<'a> GameObject<'a> for Car<'a> {
         self.update_gravity(game);
         self.check_all_collision(game);
 
-        // Update camera pos
-        use ViewState::*;
-        let eye = match self.view_state {
-            FirstPerson => {
-                self.car_state.position_wc + Vector3::new(ang_sin * -1.8, 1.2, ang_cos * -1.8)
-            }
-            ThirdPerson => {
-                self.car_state.position_wc + Vector3::new(ang_sin * -20.0, 6.0, ang_cos * -20.0)
-            }
-        };
-        let center = eye + Vector3::new(ang_sin * LOOK_DIST, 0.0, ang_cos * LOOK_DIST);
-        view_matrix.look(eye, center, Vector3::new(0.0, 1.0, 0.0));
     }
 
     fn display(&self, game: &Game, gl: &'a Context) {

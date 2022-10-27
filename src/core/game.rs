@@ -3,7 +3,7 @@ use std::{time::Instant, cell::RefCell, path::Path, slice};
 use crate::{core::{
     matrices::{ModelMatrix, ProjectionMatrix, ViewMatrix},
     shader::Shader3D,
-}, objects::cube::Cube, game_objects::{car::Car, freecam_controller::FreecamController, ground::Ground, track_segment::TrackSegment, track::Track}};
+}, objects::cube::Cube, game_objects::{car::Car, freecam_controller::FreecamController, ground::Ground, track_segment::TrackSegment, track::Track, player_car::PlayerCar, network_car::NetworkCar}, network::server_connection::ServerConnection};
 use glow::*;
 use sdl2::{
     image::ImageRWops,
@@ -25,7 +25,8 @@ pub struct Game<'a> {
     pub cube: Cube<'a>,
     last_time: Instant,
     pub game_objects: Vec<Box<RefCell<dyn GameObject<'a> + 'a>>>,
-    pub delta_time: f32
+    pub delta_time: f32,
+    pub server_connection: ServerConnection,
 }
 
 impl<'a> Game<'a> {
@@ -60,13 +61,17 @@ impl<'a> Game<'a> {
             last_time: Instant::now(),
             delta_time: 0.0,
             game_objects: Vec::new(),
+            server_connection: ServerConnection::new()
         }
     }
 
     pub fn create_scene(&mut self) {
+        self.server_connection.connect();
+
         self.add_game_object(Track::new(self.gl, self));
         self.add_game_object(Ground::new(self.gl, self));
-        self.add_game_object(Car::new(self.gl, self));
+        self.add_game_object(PlayerCar::new(self.gl, self));
+        self.add_game_object(NetworkCar::new(self.gl, self));
         // self.add_game_object(FreecamController::new(self.gl));
     }
 
@@ -101,6 +106,8 @@ impl<'a> Game<'a> {
     pub fn update(&mut self) {
         self.delta_time = (Instant::now() - self.last_time).as_secs_f32();
         self.last_time = Instant::now();
+
+        self.server_connection.update();
 
         for object in &self.game_objects {
             object.borrow_mut().update(self, self.gl);
@@ -158,5 +165,7 @@ impl<'a> Game<'a> {
             self.update();
             self.display();
         }
+
+        self.server_connection.end_connection();
     }
 }
