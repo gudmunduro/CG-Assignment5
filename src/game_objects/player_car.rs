@@ -29,7 +29,6 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
                 keycode: Some(key ),
                 ..
             } => {
-
                 use Keycode::*;
                 match key {
                     W => {

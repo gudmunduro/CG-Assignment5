@@ -1,9 +1,9 @@
-use std::{time::Instant, cell::RefCell, path::Path, slice};
+use std::{time::Instant, cell::RefCell, path::Path, slice, collections::VecDeque};
 
 use crate::{core::{
     matrices::{ModelMatrix, ProjectionMatrix, ViewMatrix},
     shader::Shader3D,
-}, objects::cube::Cube, game_objects::{car::Car, freecam_controller::FreecamController, ground::Ground, track_segment::TrackSegment, track::Track, player_car::PlayerCar, network_car::NetworkCar}, network::server_connection::ServerConnection};
+}, objects::cube::Cube, game_objects::{car::Car, freecam_controller::FreecamController, ground::Ground, track_segment::TrackSegment, track::Track, player_car::PlayerCar, network_car::NetworkCar}, network::server_connection::{ServerConnection, NetworkEvent}};
 use glow::*;
 use sdl2::{
     image::ImageRWops,
@@ -25,6 +25,7 @@ pub struct Game<'a> {
     pub cube: Cube<'a>,
     last_time: Instant,
     pub game_objects: Vec<Box<RefCell<dyn GameObject<'a> + 'a>>>,
+    pub objects_to_delete: RefCell<VecDeque<*const usize>>,
     pub delta_time: f32,
     pub server_connection: ServerConnection,
 }
@@ -61,6 +62,7 @@ impl<'a> Game<'a> {
             last_time: Instant::now(),
             delta_time: 0.0,
             game_objects: Vec::new(),
+            objects_to_delete: RefCell::new(VecDeque::new()),
             server_connection: ServerConnection::new()
         }
     }
@@ -71,7 +73,6 @@ impl<'a> Game<'a> {
         self.add_game_object(Track::new(self.gl, self));
         self.add_game_object(Ground::new(self.gl, self));
         self.add_game_object(PlayerCar::new(self.gl, self));
-        self.add_game_object(NetworkCar::new(self.gl, self));
         // self.add_game_object(FreecamController::new(self.gl));
     }
 
@@ -108,6 +109,34 @@ impl<'a> Game<'a> {
         self.last_time = Instant::now();
 
         self.server_connection.update();
+
+        // Delete all game objects that were requested to be deleted
+        {
+            let mut objects_to_delete = self.objects_to_delete.borrow_mut();
+            while !objects_to_delete.is_empty() {
+                let object_to_delte = objects_to_delete.pop_back();
+
+                match object_to_delte {
+                    Some(object) => {
+                        self.game_objects.retain(|o| o.as_ptr() as *const _ as *const usize != object);
+                    }
+                    None => ()
+                }
+            }
+        }
+
+        // Consume only the events that can be handled by the game struct
+        loop {
+            let event = self.server_connection.game_events.get_mut().back().map(|e| e.clone());
+            
+            match event {
+                Some(NetworkEvent::PlayerConnected { player_id }) => {
+                    self.add_game_object(NetworkCar::new(player_id, self.gl, self));
+                    self.server_connection.game_events.get_mut().pop_back();
+                }
+                Some(NetworkEvent::PlayerDisconnected { .. }) | None => break
+            }
+        }
 
         for object in &self.game_objects {
             object.borrow_mut().update(self, self.gl);
