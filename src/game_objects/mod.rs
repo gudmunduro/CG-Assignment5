@@ -6,3 +6,6 @@ pub mod track;
 pub mod track_side;
 pub mod player_car;
 pub mod network_car;
+pub mod track_straight_segment;
+pub mod track_right_corner_segment;
+pub mod track_u_corner_segment;

@@ -13,6 +13,8 @@ use sdl2::{
 
 use super::{constants::{W_WIDTH, W_HEIGHT}, game_object::GameObject, matrices};
 
+const SHOW_FPS: bool = false;
+
 pub struct Game<'a> {
     gl: &'a Context,
     window: &'a Window,
@@ -28,6 +30,8 @@ pub struct Game<'a> {
     pub objects_to_delete: RefCell<VecDeque<*const usize>>,
     pub delta_time: f32,
     pub server_connection: ServerConnection,
+    pub frame_sum: i32,
+    pub frame_time_sum: f32
 }
 
 impl<'a> Game<'a> {
@@ -63,7 +67,9 @@ impl<'a> Game<'a> {
             delta_time: 0.0,
             game_objects: Vec::new(),
             objects_to_delete: RefCell::new(VecDeque::new()),
-            server_connection: ServerConnection::new()
+            server_connection: ServerConnection::new(),
+            frame_sum: 0,
+            frame_time_sum: 0.0,
         }
     }
 
@@ -108,7 +114,17 @@ impl<'a> Game<'a> {
         self.delta_time = (Instant::now() - self.last_time).as_secs_f32();
         self.last_time = Instant::now();
 
-        self.server_connection.update();
+        if SHOW_FPS {
+            if self.frame_time_sum >= 1.0 {
+                println!("FPS: {}", self.frame_sum);
+                self.frame_sum = 0;
+                self.frame_time_sum = 0.0;
+            }
+            self.frame_time_sum += self.delta_time;
+            self.frame_sum += 1;
+    
+            self.server_connection.update();
+        }
 
         // Delete all game objects that were requested to be deleted
         {
