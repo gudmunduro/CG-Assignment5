@@ -3,7 +3,7 @@ use glow::Context;
 use crate::{
     core::{
         game::Game,
-        game_object::{CollisionInfo, GameObject},
+        game_object::{Collider, GameObject},
     },
 };
 
@@ -23,7 +23,7 @@ pub enum TrackSegment<'a> {
 }
 
 impl<'a> GameObject<'a> for TrackSegment<'a> {
-    fn collision_info(&self) -> CollisionInfo {
+    fn collision_info(&self) -> Collider {
         use TrackSegment::*;
         match self {
             Straight (s) => s.collision_info(),

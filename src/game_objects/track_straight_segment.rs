@@ -5,7 +5,7 @@ use crate::{
     core::{
         color::Color,
         game::Game,
-        game_object::{CollisionInfo, GameObject},
+        game_object::{Collider, GameObject},
     },
     game_objects::{
         track_segment::{TRACK_BOX_HEIGHT, TRACK_ELEVATION, TRACK_WIDTH},
@@ -51,6 +51,7 @@ impl<'a> TrackStraightSegment<'a> {
                 length,
                 Side::Right,
                 track_side::TrackSegmentSideType::Straight,
+                game,
             ),
             TrackSide::new(
                 pos,
@@ -58,6 +59,7 @@ impl<'a> TrackStraightSegment<'a> {
                 length,
                 Side::Left,
                 track_side::TrackSegmentSideType::Straight,
+                game,
             ),
         );
 
@@ -74,8 +76,8 @@ impl<'a> TrackStraightSegment<'a> {
 }
 
 impl<'a> GameObject<'a> for TrackStraightSegment<'a> {
-    fn collision_info(&self) -> crate::core::game_object::CollisionInfo {
-        CollisionInfo::YCollision(TRACK_ELEVATION)
+    fn collision_info(&self) -> crate::core::game_object::Collider {
+        Collider::MultiCollider(vec![self.left_side.collision_info(), self.right_side.collision_info()])
     }
 
     fn on_event(&mut self, game: &Game, event: &sdl2::event::Event) {}

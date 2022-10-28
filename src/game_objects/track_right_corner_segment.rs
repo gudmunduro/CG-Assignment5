@@ -2,7 +2,7 @@ use glow::{Context, NativeTexture};
 use nalgebra::Vector3;
 
 use crate::{
-    core::{color::Color, game::Game, game_object::GameObject},
+    core::{color::Color, game::Game, game_object::{GameObject, Collider}},
     objects::track_corner::{TrackCorner, TrackCornerType},
 };
 
@@ -36,6 +36,7 @@ impl<'a> TrackRightCornerSegment<'a> {
                 20.0,
                 Side::Right,
                 track_side::TrackSegmentSideType::RightCorner,
+                game,
             ),
             TrackSide::new(
                 pos,
@@ -43,6 +44,7 @@ impl<'a> TrackRightCornerSegment<'a> {
                 20.0,
                 Side::Left,
                 track_side::TrackSegmentSideType::RightCorner,
+                game,
             ),
         );
 
@@ -57,6 +59,10 @@ impl<'a> TrackRightCornerSegment<'a> {
 }
 
 impl<'a> GameObject<'a> for TrackRightCornerSegment<'a> {
+    fn collision_info(&self) -> Collider {
+        Collider::MultiCollider(vec![self.left_side.collision_info(), self.right_side.collision_info()])
+    }
+
     fn on_event(&mut self, game: &Game, event: &sdl2::event::Event) {}
 
     fn update(&mut self, game: &Game, gl: &'a Context) {}

@@ -1,20 +1,22 @@
 use glow::*;
+use nalgebra::Vector3;
 use sdl2::event::Event;
 
 use super::game::Game;
 
 #[derive(Clone)]
-pub enum CollisionInfo {
+pub enum Collider {
     NoCollision,
-    YCollision(f32),
+    HeightCollider(f32),
     // minX, minY, minZ, maxX, maxY, maxZ
-    BoxCollision(f32, f32, f32, f32, f32, f32),
-    MultiCollision(Vec<CollisionInfo>),
+    BoxCollider(f32, f32, f32, f32, f32, f32),
+    MultiCollider(Vec<Collider>),
+    InfiniteYPlaneCollider(Vector3<f32>, Vector3<f32>),
 }
 
 pub trait GameObject<'a> {
-    fn collision_info(&self) -> CollisionInfo {
-        return CollisionInfo::NoCollision;
+    fn collision_info(&self) -> Collider {
+        return Collider::NoCollision;
     }
 
     fn on_event(&mut self, game: &Game, event: &Event);

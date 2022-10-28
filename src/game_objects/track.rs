@@ -4,7 +4,7 @@ use nalgebra::Vector3;
 use crate::{
     core::{
         game::Game,
-        game_object::{CollisionInfo, GameObject},
+        game_object::{Collider, GameObject},
     },
     game_objects::{
         track_right_corner_segment::TrackRightCornerSegment,
@@ -13,7 +13,7 @@ use crate::{
     utils::FacingDirection,
 };
 
-use super::track_segment::TrackSegment;
+use super::track_segment::{TrackSegment, TRACK_ELEVATION};
 
 pub struct Track<'a> {
     track: Vec<TrackSegment<'a>>,
@@ -96,8 +96,14 @@ impl<'a> Track<'a> {
 }
 
 impl<'a> GameObject<'a> for Track<'a> {
-    fn collision_info(&self) -> CollisionInfo {
-        CollisionInfo::MultiCollision(self.track.iter().map(|s| s.collision_info()).collect())
+    fn collision_info(&self) -> Collider {
+        Collider::MultiCollider(
+            self.track
+                .iter()
+                .map(|s| s.collision_info())
+                .chain([Collider::HeightCollider(TRACK_ELEVATION)])
+                .collect(),
+        )
     }
 
     fn on_event(&mut self, game: &Game, event: &sdl2::event::Event) {}

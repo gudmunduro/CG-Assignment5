@@ -7,7 +7,7 @@ use sdl2::{event::Event, keyboard::Keycode};
 use crate::{
     core::{
         game::Game,
-        game_object::{CollisionInfo, GameObject},
+        game_object::{Collider, GameObject},
         obj_loader::load_obj_file,
     },
     objects::mesh_model::MeshModel,
@@ -70,17 +70,17 @@ impl<'a> Car<'a> {
         return (min.x.min(max.x), min.y.min(max.y), min.z.min(max.z), max.x.max(min.x), max.y.max(min.y), max.z.max(min.z));
     }
 
-    fn check_collision(&mut self, info: &CollisionInfo, game: &Game) {
-        use CollisionInfo::*;
+    fn check_collision(&mut self, info: &Collider, game: &Game) {
+        use Collider::*;
         match info {
-            &YCollision(y) => {
+            &HeightCollider(y) => {
                 let (_, c_min_y, ..) = self.car_cube(game);
                 if c_min_y <= y {
                     self.car_state.position_wc.y = y + 1.5;
                     self.y_velocity = 0.0;
                 }
             }
-            &BoxCollision(min_x, min_y, min_z, max_x, max_y, max_z) => {
+            &BoxCollider(min_x, min_y, min_z, max_x, max_y, max_z) => {
                 let (c_min_x, c_min_y, c_min_z, c_max_x, c_max_y, c_max_z) = self.car_cube(game);
 
                 let perform_collision_detect = c_min_x <= max_x &&
@@ -121,7 +121,10 @@ impl<'a> Car<'a> {
                     self.car_state.position_wc.z = closest_z;
                 }
             }
-            MultiCollision(c) => c.iter().for_each(|info| self.check_collision(&info, game)),
+            InfiniteYPlaneCollider(p0, p1) => {
+                let (c_min_x, c_min_y, c_min_z, c_max_x, c_max_y, c_max_z) = self.car_cube(game);
+            }
+            MultiCollider(c) => c.iter().for_each(|info| self.check_collision(&info, game)),
             NoCollision => (),
         }
     }

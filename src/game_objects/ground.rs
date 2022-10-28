@@ -1,6 +1,6 @@
 use glow::{Context, NativeTexture};
 
-use crate::{core::{game_object::{GameObject, CollisionInfo}, game::Game, color::Color}, objects::textured_square::TexturedSquare, utils::FacingDirection};
+use crate::{core::{game_object::{GameObject, Collider}, game::Game, color::Color}, objects::textured_square::TexturedSquare, utils::FacingDirection};
 
 
 pub struct Ground<'a> {
@@ -19,8 +19,8 @@ impl<'a> Ground<'a> {
 
 impl<'a> GameObject<'a> for Ground<'a> {
 
-    fn collision_info(&self) -> CollisionInfo {
-        CollisionInfo::YCollision(-0.2)
+    fn collision_info(&self) -> Collider {
+        Collider::HeightCollider(-0.2)
     }
 
     fn on_event(&mut self, game: &Game, event: &sdl2::event::Event) {
