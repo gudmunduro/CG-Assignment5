@@ -15,8 +15,7 @@ pub struct TrackRightCornerSegment<'a> {
     road_texture: NativeTexture,
     segemnt_object: TrackCorner<'a>,
     position: Vector3<f32>,
-    left_side: TrackSide,
-    right_side: TrackSide,
+    sides: TrackSide,
 }
 
 impl<'a> TrackRightCornerSegment<'a> {
@@ -29,38 +28,27 @@ impl<'a> TrackRightCornerSegment<'a> {
         let segemnt_object = TrackCorner::new(gl, TrackCornerType::Right);
 
         let pos = position + Vector3::new(0.0, TRACK_ELEVATION + 0.5, 0.0);
-        let (right_side, left_side) = (
+        let sides = 
             TrackSide::new(
                 pos,
                 0.0,
                 20.0,
-                Side::Right,
                 track_side::TrackSegmentSideType::RightCorner,
                 game,
-            ),
-            TrackSide::new(
-                pos,
-                0.0,
-                20.0,
-                Side::Left,
-                track_side::TrackSegmentSideType::RightCorner,
-                game,
-            ),
-        );
+            );
 
         TrackRightCornerSegment {
             road_texture,
             segemnt_object,
             position,
-            left_side,
-            right_side,
+            sides,
         }
     }
 }
 
 impl<'a> GameObject<'a> for TrackRightCornerSegment<'a> {
     fn collision_info(&self) -> Collider {
-        Collider::MultiCollider(vec![self.left_side.collision_info(), self.right_side.collision_info()])
+        self.sides.collision_info()
     }
 
     fn on_event(&mut self, game: &Game, event: &sdl2::event::Event) {}
@@ -68,8 +56,7 @@ impl<'a> GameObject<'a> for TrackRightCornerSegment<'a> {
     fn update(&mut self, game: &Game, gl: &'a Context) {}
 
     fn display(&self, game: &Game, gl: &'a Context) {
-        self.left_side.display(game, gl);
-        self.right_side.display(game, gl);
+        self.sides.display(game, gl);
 
         let mut model_matrix = game.model_matrix.borrow_mut();
 

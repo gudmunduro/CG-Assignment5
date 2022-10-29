@@ -22,8 +22,7 @@ pub struct TrackStraightSegment<'a> {
     position: Vector3<f32>,
     direction: FacingDirection,
     length: f32,
-    left_side: TrackSide,
-    right_side: TrackSide,
+    sides: TrackSide,
     road_texture: NativeTexture,
 }
 
@@ -44,23 +43,12 @@ impl<'a> TrackStraightSegment<'a> {
         };
 
         let pos = position + Vector3::new(0.0, TRACK_ELEVATION + 0.5, 0.0);
-        let (right_side, left_side) = (
-            TrackSide::new(
-                pos,
-                rot,
-                length,
-                Side::Right,
-                track_side::TrackSegmentSideType::Straight,
-                game,
-            ),
-            TrackSide::new(
-                pos,
-                rot,
-                length,
-                Side::Left,
-                track_side::TrackSegmentSideType::Straight,
-                game,
-            ),
+        let sides = TrackSide::new(
+            pos,
+            rot,
+            length,
+            track_side::TrackSegmentSideType::Straight,
+            game,
         );
 
         TrackStraightSegment {
@@ -68,8 +56,7 @@ impl<'a> TrackStraightSegment<'a> {
             position,
             direction,
             length,
-            left_side,
-            right_side,
+            sides,
             road_texture,
         }
     }
@@ -77,7 +64,7 @@ impl<'a> TrackStraightSegment<'a> {
 
 impl<'a> GameObject<'a> for TrackStraightSegment<'a> {
     fn collision_info(&self) -> crate::core::game_object::Collider {
-        Collider::MultiCollider(vec![self.left_side.collision_info(), self.right_side.collision_info()])
+        self.sides.collision_info()
     }
 
     fn on_event(&mut self, game: &Game, event: &sdl2::event::Event) {}
@@ -85,8 +72,7 @@ impl<'a> GameObject<'a> for TrackStraightSegment<'a> {
     fn update(&mut self, game: &Game, gl: &'a Context) {}
 
     fn display(&self, game: &Game, gl: &'a Context) {
-        self.left_side.display(game, gl);
-        self.right_side.display(game, gl);
+        self.sides.display(game, gl);
 
         let mut model_matrix = game.model_matrix.borrow_mut();
 

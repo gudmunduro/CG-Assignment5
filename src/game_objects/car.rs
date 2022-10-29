@@ -1,14 +1,14 @@
 use std::f32;
 
 use glow::*;
-use nalgebra::{Vector3, Vector4};
+use nalgebra::{Vector3, Vector4, Vector2};
 use sdl2::{event::Event, keyboard::Keycode};
 
 use crate::{
     core::{
         game::Game,
         game_object::{Collider, GameObject},
-        obj_loader::load_obj_file,
+        obj_loader::load_obj_file, color::Color,
     },
     objects::mesh_model::MeshModel,
     utils::car_sim::{self, CarState},
@@ -55,19 +55,75 @@ impl<'a> Car<'a> {
         let mut model_matrix = game.model_matrix.borrow_mut();
 
         model_matrix.push_stack();
-        model_matrix.add_translate(self.car_state.position_wc.x, self.car_state.position_wc.y, self.car_state.position_wc.z);
+        model_matrix.add_translate(
+            self.car_state.position_wc.x,
+            self.car_state.position_wc.y,
+            self.car_state.position_wc.z,
+        );
         model_matrix.add_rotation(0.0, self.car_state.angle, 0.0);
         model_matrix.add_scale(5.0, 3.0, 10.0);
-        
+
         let local_max = Vector4::new(0.5, 0.5, 0.5, 1.0);
         let local_min = Vector4::new(-0.5, -0.5, -0.5, 1.0);
 
-        let max =  model_matrix.matrix * local_max;
+        let max = model_matrix.matrix * local_max;
         let min = model_matrix.matrix * local_min;
 
         model_matrix.pop_stack();
 
-        return (min.x.min(max.x), min.y.min(max.y), min.z.min(max.z), max.x.max(min.x), max.y.max(min.y), max.z.max(min.z));
+        return (
+            min.x.min(max.x),
+            min.y.min(max.y),
+            min.z.min(max.z),
+            max.x.max(min.x),
+            max.y.max(min.y),
+            max.z.max(min.z),
+        );
+    }
+
+    fn full_car_cube(&self, game: &Game) -> [Vector3<f32>; 8] {
+        let mut model_matrix = game.model_matrix.borrow_mut();
+
+        model_matrix.push_stack();
+        model_matrix.add_translate(
+            self.car_state.position_wc.x,
+            self.car_state.position_wc.y,
+            self.car_state.position_wc.z,
+        );
+        model_matrix.add_rotation(0.0, self.car_state.angle, 0.0);
+        model_matrix.add_scale(5.0, 3.0, 10.0);
+
+        let bottom_left_inner_local = Vector4::new(-0.5, -0.5, -0.5, 1.0);
+        let bottom_right_inner_local = Vector4::new(0.5, -0.5, -0.5, 1.0);
+        let top_left_inner_local = Vector4::new(-0.5, 0.5, -0.5, 1.0);
+        let top_right_inner_local = Vector4::new(0.5, 0.5, -0.5, 1.0);
+        let bottom_left_outer_local = Vector4::new(-0.5, -0.5, 0.5, 1.0);
+        let bottom_right_outer_local = Vector4::new(0.5, -0.5, 0.5, 1.0);
+        let top_left_outer_local = Vector4::new(-0.5, 0.5, 0.5, 1.0);
+        let top_right_outer_local = Vector4::new(0.5, 0.5, 0.5, 1.0);
+
+        let bottom_left_inner = (model_matrix.matrix * bottom_left_inner_local).xyz();
+        let bottom_right_inner = (model_matrix.matrix * bottom_right_inner_local).xyz();
+        let bottom_left_outer = (model_matrix.matrix * bottom_left_outer_local).xyz();
+        let bottom_right_outer = (model_matrix.matrix * bottom_right_outer_local).xyz();
+
+        let top_left_inner = (model_matrix.matrix * top_left_inner_local).xyz();
+        let top_right_inner = (model_matrix.matrix * top_right_inner_local).xyz();
+        let top_left_outer = (model_matrix.matrix * top_left_outer_local).xyz();
+        let top_right_outer = (model_matrix.matrix * top_right_outer_local).xyz();
+
+        model_matrix.pop_stack();
+
+        [
+            bottom_left_inner,
+            bottom_right_inner,
+            bottom_left_outer,
+            bottom_right_outer,
+            top_left_inner,
+            top_right_inner,
+            top_left_outer,
+            top_right_outer,
+        ]
     }
 
     fn check_collision(&mut self, info: &Collider, game: &Game) {
@@ -83,12 +139,12 @@ impl<'a> Car<'a> {
             &BoxCollider(min_x, min_y, min_z, max_x, max_y, max_z) => {
                 let (c_min_x, c_min_y, c_min_z, c_max_x, c_max_y, c_max_z) = self.car_cube(game);
 
-                let perform_collision_detect = c_min_x <= max_x &&
-                    c_max_x >= min_x &&
-                    c_min_y <= max_y &&
-                    c_max_y >= min_y &&
-                    c_min_z <= max_z &&
-                    c_max_z >= min_z;
+                let perform_collision_detect = c_min_x <= max_x
+                    && c_max_x >= min_x
+                    && c_min_y <= max_y
+                    && c_max_y >= min_y
+                    && c_min_z <= max_z
+                    && c_max_z >= min_z;
 
                 if perform_collision_detect {
                     let mut closest_x = self.car_state.position_wc.x;
@@ -122,7 +178,51 @@ impl<'a> Car<'a> {
                 }
             }
             InfiniteYPlaneCollider(p0, p1) => {
-                let (c_min_x, c_min_y, c_min_z, c_max_x, c_max_y, c_max_z) = self.car_cube(game);
+                let corners = self.full_car_cube(game);
+
+                let line_contains_pint = |start: &Vector2<f32>, end: &Vector2<f32>, point: &Vector2<f32>| {
+                    // We need to handle the cases when the line goes in both directions
+                    if start.x <= end.x {
+                        if !(point.x >= start.x && point.x <= end.x) {
+                            return false;
+                        }
+                    } else if start.x > end.x {
+                        if !(point.x >= end.x && point.x <= start.x) {
+                            return false;
+                        }
+                    }
+                
+                    if start.y <= end.y {
+                        if !(point.y >= start.y && point.y <= end.y) {
+                            return false;
+                        }
+                    } else if start.y > end.y {
+                        if !(point.y >= end.y && point.y <= start.y) {
+                            return false;
+                        }
+                    }
+                
+                    return true;
+                };
+
+                for corner in &corners[..4] {
+                    let v = (p1 - p0).xz();
+
+                    let a_mat = corner.xz();
+                    let b_mat = p0.xz();
+                    let c = self.car_state.velocity_wc.xz();
+                    let n = Vector2::new(-v.y, v.x);
+
+                    let t_hit = (n.dot(&(b_mat-a_mat))) / (n.dot(&c));
+                    let p_hit = a_mat + t_hit * c;
+
+                    if line_contains_pint(&p0.xz(), &p1.xz(), &p_hit) && t_hit <= game.delta_time * 2.0 && t_hit > 0.0 {
+                        let reflected = c - ((2.0 * (c.dot(&n))) / (n.dot(&n))) * n;
+
+                        self.car_state.velocity_wc.x = reflected.x;
+                        self.car_state.velocity_wc.z = reflected.y;
+                    }
+                }
             }
             MultiCollider(c) => c.iter().for_each(|info| self.check_collision(&info, game)),
             NoCollision => (),
@@ -188,8 +288,7 @@ impl<'a> Car<'a> {
         self.handbrake
     }
 
-    pub fn set_handbrake(&mut self, value: bool)
-    {
+    pub fn set_handbrake(&mut self, value: bool) {
         self.handbrake = value;
     }
 
@@ -211,8 +310,7 @@ impl<'a> Car<'a> {
 }
 
 impl<'a> GameObject<'a> for Car<'a> {
-    fn on_event(&mut self, game: &Game, event: &Event) {
-    }
+    fn on_event(&mut self, game: &Game, event: &Event) {}
 
     fn update(&mut self, game: &Game, gl: &'a Context) {
         self.car_state
@@ -225,7 +323,6 @@ impl<'a> GameObject<'a> for Car<'a> {
 
         self.update_gravity(game);
         self.check_all_collision(game);
-
     }
 
     fn display(&self, game: &Game, gl: &'a Context) {
