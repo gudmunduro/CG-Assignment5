@@ -55,14 +55,14 @@ impl ServerConnection {
         matches!(self.connection, Connection::Connected(_))
     }
 
-    pub fn send_status_update(&self, position: &Vector3<f32>, rotation: f32) {
+    pub fn send_status_update(&self, position: &Vector3<f32>, rotation: f32, steering_angle: f32) {
         let player_id = match self.player_id {
             Some(player_id) => player_id,
             // Don't send any status updates if we havent gotten a player id yet
             None => return
         };
 
-        let status = models::StatusUpdate::new(player_id, models::Vector3::from_nvector3(position), rotation);
+        let status = models::StatusUpdate::new(player_id, models::Vector3::from_nvector3(position), rotation, steering_angle);
         self.send_packet(models::GamePacket::StatusUpdate(status));
     }
 

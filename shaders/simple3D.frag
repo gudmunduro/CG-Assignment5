@@ -11,6 +11,7 @@ uniform sampler2D u_texture_diffuse;
 uniform sampler2D u_texture_specular;
 uniform bool u_diffuse_active;
 uniform bool u_specular_active;
+uniform bool u_skybox_mode;
 
 varying vec4 s[LIGHT_COUNT];
 varying vec4 v;
@@ -19,6 +20,11 @@ varying vec2 v_uv;
 
 void main(void)
 {
+	if (u_skybox_mode) {
+		gl_FragColor = texture2D(u_texture_diffuse, v_uv);
+		return;
+	}
+
 	vec4 global_ambient = vec4(0.4, 0.4, 0.4, 1.0);
 	vec4 light_calculated_color = vec4(0.0, 0.0, 0.0, 0.0);
 

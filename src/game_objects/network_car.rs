@@ -49,6 +49,7 @@ impl<'a> GameObject<'a> for NetworkCar<'a> {
 
         self.car.set_position(status.position.into());
         self.car.set_angle(status.rotation);
+        self.car.set_steering_angle(status.steering_angle);
     }
 
     fn display(&self, game: &Game, gl: &'a Context) {

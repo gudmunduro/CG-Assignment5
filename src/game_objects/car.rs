@@ -37,7 +37,7 @@ impl<'a> Car<'a> {
         let wheel_model =
             load_obj_file("./models", "wheel2.obj", gl, game).expect("Failed to load wheel model");
         let mut car_state = CarState::new();
-        // car_state.position_wc.y = 40.0;
+        car_state.position_wc.y = 40.0;
 
         Car {
             car_model,
@@ -241,7 +241,7 @@ impl<'a> Car<'a> {
 
     fn update_gravity(&mut self, game: &Game) {
         self.car_state.position_wc.y += self.y_velocity * game.delta_time;
-        self.y_velocity -= 9.8 * 1.7 * game.delta_time * 0.001;
+        self.y_velocity -= 9.8 * 1.7 * game.delta_time;
     }
 
     pub fn throttle(&self) -> f32 {

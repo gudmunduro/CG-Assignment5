@@ -4,21 +4,21 @@ use crate::{core::{game::Game, game_object::GameObject}, objects::skybox_cubemap
 
 
 pub struct Skybox<'a> {
-    skybox_texture: NativeTexture,
+    skybox_texture: Vec<NativeTexture>,
     skybox_cubemap: SkyboxCubemap<'a>,
 }
 
 impl<'a> Skybox<'a> {
     pub fn new(gl: &'a Context, game: &Game) -> Skybox<'a> {
         let skybox_faces = vec![
-            "./models/textures/skybox/right.jpg",
-            "./models/textures/skybox/left.jpg",
-            "./models/textures/skybox/top.jpg",
-            "./models/textures/skybox/bottom.jpg",
-            "./models/textures/skybox/front.jpg",
-            "./models/textures/skybox/back.jpg",
+            "./models/textures/skybox2/front.png",
+            "./models/textures/skybox2/back.png",
+            "./models/textures/skybox2/down.png",
+            "./models/textures/skybox2/up.png",
+            "./models/textures/skybox2/left.png",
+            "./models/textures/skybox2/right.png",
         ];
-        let skybox_texture = game.load_cubemap(&skybox_faces);
+        let skybox_texture = skybox_faces.iter().map(|t| game.load_texture(*t, false)).collect();
         let skybox_cubemap = SkyboxCubemap::new(gl);
 
         Skybox { skybox_texture, skybox_cubemap }
@@ -39,19 +39,22 @@ impl<'a> GameObject<'a> for Skybox<'a> {
             gl.depth_mask(false);
         }
 
-        game.skybox_shader.use_shader();
-        game.skybox_shader.set_view_matrix(game.view_matrix.borrow().get_matrix().as_slice());
-        game.skybox_shader.set_projection_matrix(game.projection_matrix.borrow().get_matrix().as_slice());
-        game.skybox_shader.set_skybox_texture_loc(0);
-
-        self.skybox_cubemap.draw(&game.skybox_shader, &self.skybox_texture);
+        let mut model_matrix = game.model_matrix.borrow_mut();
+        model_matrix.push_stack();
+        model_matrix.add_translate(0.0, 0.0, 0.0);
+        model_matrix.add_scale(400.0, 400.0, 400.0);
         
+        game.shader.set_view_matrix(game.view_matrix.borrow().get_matrix_no_tranlate().as_slice());
+        game.shader.set_model_matrix(model_matrix.matrix.as_slice());
+        game.shader.set_skybox_mode(true);
+        self.skybox_cubemap.draw(&game.shader, &self.skybox_texture);
+        game.shader.set_view_matrix(game.view_matrix.borrow().get_matrix().as_slice());
+        game.shader.set_skybox_mode(false);
+        
+        model_matrix.pop_stack();
         unsafe {
-            gl.depth_mask(false);
+            gl.depth_mask(true);
         }
-
-        // Switch back to default shader so other objects are drawn correctly
-        game.shader.use_shader();
     }
 }
 

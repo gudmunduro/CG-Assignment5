@@ -51,7 +51,7 @@ impl<'a> Game<'a> {
 
         shader.use_shader();
         shader.set_view_matrix(view_matrix.get_matrix().as_slice());
-        projection_matrix.set_perspective(60.0, W_WIDTH as f32 / W_HEIGHT as f32, 0.5, 300.0);
+        projection_matrix.set_perspective(60.0, W_WIDTH as f32 / W_HEIGHT as f32, 0.5, 500.0);
         shader.set_projection_matrix(projection_matrix.get_matrix().as_slice());
 
         Game {
@@ -79,8 +79,8 @@ impl<'a> Game<'a> {
         self.server_connection.connect();
 
         self.add_game_object(Skybox::new(self.gl, self));
-        // self.add_game_object(Track::new(self.gl, self));
-        // self.add_game_object(Ground::new(self.gl, self));
+        self.add_game_object(Track::new(self.gl, self));
+        self.add_game_object(Ground::new(self.gl, self));
         self.add_game_object(PlayerCar::new(self.gl, self));
         // self.add_game_object(FreecamController::new(self.gl));
     }
@@ -155,9 +155,9 @@ impl<'a> Game<'a> {
             }
             self.frame_time_sum += self.delta_time;
             self.frame_sum += 1;
-    
-            self.server_connection.update();
         }
+
+        self.server_connection.update();
 
         // Delete all game objects that were requested to be deleted
         {
@@ -195,8 +195,8 @@ impl<'a> Game<'a> {
     pub fn display(&mut self) {
         unsafe {
             self.gl.enable(DEPTH_TEST);
-            // self.gl.enable(BLEND);
-            // self.gl.blend_func(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
+            self.gl.enable(BLEND);
+            self.gl.blend_func(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
             self.gl.clear_color(0.03, 0.04, 0.13, 1.0);
             self.gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
             self.gl.viewport(0, 0, self.window.size().0 as i32, self.window.size().1 as i32);

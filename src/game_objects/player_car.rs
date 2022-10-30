@@ -74,7 +74,7 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
                     }
                     // TODO: Remove this after testing
                     L => {
-                        self.car.set_y_velocity(0.0);
+                        self.car.set_y_velocity(20.0);
                     }
                     _ => (),
                 }
@@ -88,7 +88,7 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
 
         // Send status update
         if game.server_connection.is_multiplayer() {
-            game.server_connection.send_status_update(self.car.position(), self.car.angle());
+            game.server_connection.send_status_update(self.car.position(), self.car.angle(), self.car.steering_angle());
         }
 
         let mut view_matrix = game.view_matrix.borrow_mut();

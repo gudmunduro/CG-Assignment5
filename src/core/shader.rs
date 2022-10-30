@@ -26,6 +26,7 @@ pub struct Shader3D<'a> {
     specular_texture_active_loc: NativeUniformLocation,
     diffuse_texture_loc: NativeUniformLocation,
     specular_texture_loc: NativeUniformLocation,
+    skybox_mode_loc: NativeUniformLocation,
 }
 
 impl<'a> Shader3D<'a> {
@@ -119,6 +120,9 @@ impl<'a> Shader3D<'a> {
             let specular_texture_loc = gl
                 .get_uniform_location(rendering_program_id, "u_texture_specular")
                 .unwrap();
+            let skybox_mode_loc = gl
+                .get_uniform_location(rendering_program_id, "u_skybox_mode")
+                .unwrap();
 
             Shader3D {
                 gl,
@@ -142,6 +146,7 @@ impl<'a> Shader3D<'a> {
                 specular_texture_active_loc,
                 diffuse_texture_loc,
                 specular_texture_loc,
+                skybox_mode_loc,
             }
         }
     }
@@ -176,51 +181,55 @@ impl<'a> Shader3D<'a> {
     pub fn set_position_attribute(&self, vertex_array: &[f32]) {
         unsafe {
             let array_ptr: u64 = mem::transmute(vertex_array.as_ptr());
-            self.gl.vertex_attrib_pointer_f32(
-                self.position_loc,
-                3,
-                FLOAT,
-                false,
-                0,
-                array_ptr,
-            );
+            self.gl
+                .vertex_attrib_pointer_f32(self.position_loc, 3, FLOAT, false, 0, array_ptr);
         }
     }
 
     pub fn set_normal_attribute(&self, vertex_array: &[f32]) {
         unsafe {
             let array_ptr: u64 = mem::transmute(vertex_array.as_ptr());
-            self.gl.vertex_attrib_pointer_f32(
-                self.normal_loc,
-                3,
-                FLOAT,
-                false,
-                0,
-                array_ptr,
-            );
+            self.gl
+                .vertex_attrib_pointer_f32(self.normal_loc, 3, FLOAT, false, 0, array_ptr);
         }
     }
 
     pub fn set_uv_attribute(&self, uv_array: &[f32]) {
         unsafe {
             let array_ptr: u64 = mem::transmute(uv_array.as_ptr());
-            self.gl.vertex_attrib_pointer_f32(
-                self.uv_loc,
-                2,
-                FLOAT,
-                false,
-                0,
-                array_ptr,
-            );
+            self.gl
+                .vertex_attrib_pointer_f32(self.uv_loc, 2, FLOAT, false, 0, array_ptr);
         }
     }
 
     pub fn set_attribute_buffers(&self, vertex_buffer_id: &NativeBuffer) {
         unsafe {
-            self.gl.bind_buffer(ARRAY_BUFFER, Some(vertex_buffer_id.clone()));
-            self.gl.vertex_attrib_pointer_f32(self.position_loc, 3, FLOAT, false, 8 * mem::size_of::<f32>() as i32, 0);
-            self.gl.vertex_attrib_pointer_f32(self.normal_loc, 3, FLOAT, false, 8 * mem::size_of::<f32>() as i32, 3 * mem::size_of::<f32>() as u64);
-            self.gl.vertex_attrib_pointer_f32(self.uv_loc, 2, FLOAT, false, 8 * mem::size_of::<f32>() as i32, 6 * mem::size_of::<f32>() as u64);
+            self.gl
+                .bind_buffer(ARRAY_BUFFER, Some(vertex_buffer_id.clone()));
+            self.gl.vertex_attrib_pointer_f32(
+                self.position_loc,
+                3,
+                FLOAT,
+                false,
+                8 * mem::size_of::<f32>() as i32,
+                0,
+            );
+            self.gl.vertex_attrib_pointer_f32(
+                self.normal_loc,
+                3,
+                FLOAT,
+                false,
+                8 * mem::size_of::<f32>() as i32,
+                3 * mem::size_of::<f32>() as u64,
+            );
+            self.gl.vertex_attrib_pointer_f32(
+                self.uv_loc,
+                2,
+                FLOAT,
+                false,
+                8 * mem::size_of::<f32>() as i32,
+                6 * mem::size_of::<f32>() as u64,
+            );
         }
     }
 
@@ -260,7 +269,7 @@ impl<'a> Shader3D<'a> {
 
     pub fn set_material_diffuse(&self, color: &Color) {
         let Color { r, g, b, a } = color.clone();
-        
+
         unsafe {
             self.gl.uniform_4_f32(Some(&self.mat_dif_loc), r, g, b, a);
         }
@@ -290,25 +299,36 @@ impl<'a> Shader3D<'a> {
 
     pub fn set_diffuse_texture_active(&self, value: bool) {
         unsafe {
-            self.gl.uniform_1_u32(Some(&self.diffuse_texture_active_loc), value as u32);
+            self.gl
+                .uniform_1_u32(Some(&self.diffuse_texture_active_loc), value as u32);
         }
     }
 
     pub fn set_specular_texture_active(&self, value: bool) {
         unsafe {
-            self.gl.uniform_1_u32(Some(&self.specular_texture_active_loc), value as u32);
+            self.gl
+                .uniform_1_u32(Some(&self.specular_texture_active_loc), value as u32);
         }
     }
 
     pub fn set_diffuse_texture(&self, value: u32) {
         unsafe {
-            self.gl.uniform_1_u32(Some(&self.diffuse_texture_loc), value);
+            self.gl
+                .uniform_1_u32(Some(&self.diffuse_texture_loc), value);
         }
     }
 
     pub fn set_specular_texture(&self, value: u32) {
         unsafe {
-            self.gl.uniform_1_u32(Some(&self.specular_texture_loc), value);
+            self.gl
+                .uniform_1_u32(Some(&self.specular_texture_loc), value);
+        }
+    }
+
+    pub fn set_skybox_mode(&self, value: bool) {
+        unsafe {
+            self.gl
+                .uniform_1_u32(Some(&self.skybox_mode_loc), value as u32);
         }
     }
 }
