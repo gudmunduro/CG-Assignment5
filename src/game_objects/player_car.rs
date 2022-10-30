@@ -16,7 +16,7 @@ pub struct PlayerCar<'a> {
 
 impl<'a> PlayerCar<'a> {
     pub fn new(gl: &'a Context, game: &Game) -> PlayerCar<'a> {
-        let car = Car::new(gl, game);
+        let car = Car::new(true, gl, game);
 
         PlayerCar { car }
     }

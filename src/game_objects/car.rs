@@ -28,10 +28,11 @@ pub struct Car<'a> {
     handbrake: bool,
     wheel_rotation: f32,
     view_state: ViewState,
+    enable_collision_check: bool
 }
 
 impl<'a> Car<'a> {
-    pub fn new(gl: &'a Context, game: &Game) -> Car<'a> {
+    pub fn new(enable_collision_check: bool, gl: &'a Context, game: &Game) -> Car<'a> {
         let car_model =
             load_obj_file("./models", "car.obj", gl, game).expect("Failed to load car model");
         let wheel_model =
@@ -48,10 +49,11 @@ impl<'a> Car<'a> {
             handbrake: false,
             wheel_rotation: 0.0,
             view_state: ViewState::ThirdPerson,
+            enable_collision_check
         }
     }
 
-    fn car_cube(&self, game: &Game) -> (f32, f32, f32, f32, f32, f32) {
+    pub fn car_cube(&self, game: &Game) -> (f32, f32, f32, f32, f32, f32) {
         let mut model_matrix = game.model_matrix.borrow_mut();
 
         model_matrix.push_stack();
@@ -322,7 +324,9 @@ impl<'a> GameObject<'a> for Car<'a> {
         }
 
         self.update_gravity(game);
-        self.check_all_collision(game);
+        if self.enable_collision_check {
+            self.check_all_collision(game);
+        }
     }
 
     fn display(&self, game: &Game, gl: &'a Context) {

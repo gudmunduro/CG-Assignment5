@@ -1,7 +1,7 @@
 use glow::Context;
 use nalgebra::Vector3;
 
-use crate::{core::{game::Game, game_object::GameObject}, network::server_connection::NetworkEvent};
+use crate::{core::{game::Game, game_object::{GameObject, Collider}}, network::server_connection::NetworkEvent};
 
 use super::car::Car;
 
@@ -9,24 +9,31 @@ use super::car::Car;
 pub struct NetworkCar<'a> {
     player_id: u8,
     car: Car<'a>,
+    collider: Option<Collider>
 }
 
 impl<'a> NetworkCar<'a> {
     pub fn new (player_id: u8, gl: &'a Context, game: &Game) -> NetworkCar<'a> {
-        let mut car = Car::new(gl, game);
+        let mut car = Car::new(true, gl, game);
         car.set_position(Vector3::new(5.0, 35.0, 0.0));
 
-        NetworkCar { player_id, car }
+        NetworkCar { player_id, car, collider: None }
     }
 }
 
 impl<'a> GameObject<'a> for NetworkCar<'a> {
+    fn collision_info(&self) -> Collider {
+        self.collider.clone().unwrap_or(Collider::NoCollision)
+    }
+
     fn on_event(&mut self, game: &Game, event: &sdl2::event::Event) {
         
     }
 
     fn update(&mut self, game: &Game, gl: &'a Context) {
         self.car.update(game, gl);
+        let (min_x, min_y, min_z, max_x, max_y, max_z) = self.car.car_cube(game);
+        self.collider = Some(Collider::BoxCollider(min_x, min_y, min_z, max_x, max_y, max_z));
 
         let status = match game.server_connection.last_status(self.player_id) {
             Some(s) => s,
