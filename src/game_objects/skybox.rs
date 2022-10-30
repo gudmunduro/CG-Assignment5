@@ -11,12 +11,12 @@ pub struct Skybox<'a> {
 impl<'a> Skybox<'a> {
     pub fn new(gl: &'a Context, game: &Game) -> Skybox<'a> {
         let skybox_faces = vec![
-            "./models/textures/skybox2/front.png",
-            "./models/textures/skybox2/back.png",
-            "./models/textures/skybox2/down.png",
-            "./models/textures/skybox2/up.png",
-            "./models/textures/skybox2/left.png",
-            "./models/textures/skybox2/right.png",
+            "./models/textures/mars_skybox/front.png",
+            "./models/textures/mars_skybox/back.png",
+            "./models/textures/mars_skybox/down.png",
+            "./models/textures/mars_skybox/up.png",
+            "./models/textures/mars_skybox/left.png",
+            "./models/textures/mars_skybox/right.png",
         ];
         let skybox_texture = skybox_faces.iter().map(|t| game.load_texture(*t, false)).collect();
         let skybox_cubemap = SkyboxCubemap::new(gl);

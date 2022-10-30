@@ -6,4 +6,3 @@ pub mod material;
 pub mod matrices;
 pub mod obj_loader;
 pub mod shader;
-pub mod skybox_shader;

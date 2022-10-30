@@ -36,7 +36,7 @@ impl<'a> Car<'a> {
         let car_model =
             load_obj_file("./models", "car.obj", gl, game).expect("Failed to load car model");
         let wheel_model =
-            load_obj_file("./models", "wheel2.obj", gl, game).expect("Failed to load wheel model");
+            load_obj_file("./models", "wheel.obj", gl, game).expect("Failed to load wheel model");
         let mut car_state = CarState::new();
         car_state.position_wc.y = 40.0;
 

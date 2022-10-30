@@ -3,7 +3,7 @@ use std::slice;
 use glow::*;
 use itertools::{Itertools, izip};
 
-use crate::core::{shader::Shader3D, skybox_shader::SkyboxShader};
+use crate::core::{shader::Shader3D};
 
 
 pub struct SkyboxCubemap<'a> {
@@ -64,40 +64,40 @@ impl<'a> SkyboxCubemap<'a> {
         1.0, 0.0, 0.0];
         let uv_array = [
             // Back
-            0.0, 1.0,
-            0.0, 0.0,
             1.0, 0.0,
             1.0, 1.0,
+            0.0, 1.0,
+            0.0, 0.0,
 
             // Front
-            1.0, 1.0,
-            1.0, 0.0,
             0.0, 0.0,
             0.0, 1.0,
+            1.0, 1.0,
+            1.0, 0.0,
 
             // Bottom
-            0.0, 0.0,
             1.0, 0.0,
-            1.0, 1.0,
+            0.0, 0.0,
             0.0, 1.0,
+            1.0, 1.0,
 
             // Top
-            0.0, 0.0,
             1.0, 0.0,
-            1.0, 1.0,
+            0.0, 0.0,
             0.0, 1.0,
+            1.0, 1.0,
 
             // Right
-            1.0, 1.0,
-            0.0, 1.0,
             0.0, 0.0,
             1.0, 0.0,
+            1.0, 1.0,
+            0.0, 1.0,
 
             // Left
-            0.0, 1.0,
-            1.0, 1.0,
             1.0, 0.0,
             0.0, 0.0,
+            0.0, 1.0,
+            1.0, 1.0,
         ];
 
         let vertex_array = izip!(

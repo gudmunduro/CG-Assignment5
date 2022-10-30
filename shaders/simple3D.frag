@@ -24,7 +24,7 @@ varying vec2 v_uv;
 void main(void)
 {
 	if (u_skybox_mode) {
-		gl_FragColor = mix(fog_color, texture2D(u_texture_diffuse, v_uv), 0.6);
+		gl_FragColor = mix(fog_color, texture2D(u_texture_diffuse, v_uv), 0.2);
 		return;
 	}
 

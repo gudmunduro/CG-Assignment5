@@ -11,7 +11,7 @@ use sdl2::{
     EventPump, event::Event, keyboard::Keycode, pixels::PixelFormatEnum,
 };
 
-use super::{constants::{W_WIDTH, W_HEIGHT}, game_object::GameObject, matrices, skybox_shader::SkyboxShader};
+use super::{constants::{W_WIDTH, W_HEIGHT}, game_object::GameObject, matrices};
 
 const SHOW_FPS: bool = false;
 
@@ -21,7 +21,6 @@ pub struct Game<'a> {
     events_loop: &'a mut EventPump,
     gl_context: &'a GLContext,
     pub shader: Shader3D<'a>,
-    pub skybox_shader: SkyboxShader<'a>,
     pub model_matrix: RefCell<ModelMatrix>,
     pub view_matrix: RefCell<ViewMatrix>,
     pub projection_matrix: RefCell<ProjectionMatrix>,
@@ -60,7 +59,6 @@ impl<'a> Game<'a> {
             events_loop,
             gl_context,
             shader,
-            skybox_shader: SkyboxShader::new(gl),
             model_matrix: RefCell::new(model_matrix),
             view_matrix: RefCell::new(view_matrix),
             projection_matrix: RefCell::new(projection_matrix),
@@ -80,7 +78,7 @@ impl<'a> Game<'a> {
 
         self.add_game_object(Skybox::new(self.gl, self));
         self.add_game_object(Track::new(self.gl, self));
-        self.add_game_object(Ground::new(self.gl, self));
+        // self.add_game_object(Ground::new(self.gl, self));
         self.add_game_object(PlayerCar::new(self.gl, self));
         // self.add_game_object(FreecamController::new(self.gl));
     }
