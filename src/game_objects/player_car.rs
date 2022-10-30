@@ -74,7 +74,7 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
                     }
                     // TODO: Remove this after testing
                     L => {
-                        self.car.set_y_velocity(20.0);
+                        self.car.set_y_velocity(0.0);
                     }
                     _ => (),
                 }

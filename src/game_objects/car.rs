@@ -37,7 +37,7 @@ impl<'a> Car<'a> {
         let wheel_model =
             load_obj_file("./models", "wheel2.obj", gl, game).expect("Failed to load wheel model");
         let mut car_state = CarState::new();
-        car_state.position_wc.y = 40.0;
+        // car_state.position_wc.y = 40.0;
 
         Car {
             car_model,
@@ -216,7 +216,7 @@ impl<'a> Car<'a> {
                     let t_hit = (n.dot(&(b_mat-a_mat))) / (n.dot(&c));
                     let p_hit = a_mat + t_hit * c;
 
-                    if line_contains_pint(&p0.xz(), &p1.xz(), &p_hit) && t_hit <= game.delta_time * 2.0 && t_hit > 0.0 {
+                    if line_contains_pint(&p0.xz(), &p1.xz(), &p_hit) && t_hit <= game.delta_time * 1.5 && t_hit > 0.0 {
                         let reflected = c - ((2.0 * (c.dot(&n))) / (n.dot(&n))) * n;
 
                         self.car_state.velocity_wc.x = reflected.x;
@@ -241,7 +241,7 @@ impl<'a> Car<'a> {
 
     fn update_gravity(&mut self, game: &Game) {
         self.car_state.position_wc.y += self.y_velocity * game.delta_time;
-        self.y_velocity -= 9.8 * 1.7 * game.delta_time;
+        self.y_velocity -= 9.8 * 1.7 * game.delta_time * 0.001;
     }
 
     pub fn throttle(&self) -> f32 {

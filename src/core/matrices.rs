@@ -217,4 +217,17 @@ impl ProjectionMatrix {
                 0.0, 0.0, e, f;
                 0.0, 0.0, -1.0, 0.0]
     }
+
+    pub fn get_matrix_notransform(&self) -> Matrix<f32, Const<4>, Const<4>, ArrayStorage<f32, 4, 4>> {
+        let a = (2.0 * self.near) / (self.right - self.left);
+        let b = (self.right + self.left) / (self.right - self.left);
+        let c = (2.0 * self.near) / (self.top - self.bottom);
+        let d = (self.top + self.bottom) / (self.top - self.bottom);
+        let e = -(self.far + self.near) / (self.far - self.near);
+
+        matrix![a, 0.0, b, 0.0;
+                0.0, c, d, 0.0;
+                0.0, 0.0, e, 0.0;
+                0.0, 0.0, 0.0, 0.0;]
+    }
 }

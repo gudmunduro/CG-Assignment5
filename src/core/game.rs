@@ -3,7 +3,7 @@ use std::{time::Instant, cell::RefCell, path::Path, slice, collections::VecDeque
 use crate::{core::{
     matrices::{ModelMatrix, ProjectionMatrix, ViewMatrix},
     shader::Shader3D,
-}, objects::cube::Cube, game_objects::{car::Car, freecam_controller::FreecamController, ground::Ground, track_segment::TrackSegment, track::Track, player_car::PlayerCar, network_car::NetworkCar}, network::server_connection::{ServerConnection, NetworkEvent}};
+}, objects::cube::Cube, game_objects::{car::Car, freecam_controller::FreecamController, ground::Ground, track_segment::TrackSegment, track::Track, player_car::PlayerCar, network_car::NetworkCar, skybox::Skybox}, network::server_connection::{ServerConnection, NetworkEvent}};
 use glow::*;
 use sdl2::{
     image::ImageRWops,
@@ -11,7 +11,7 @@ use sdl2::{
     EventPump, event::Event, keyboard::Keycode, pixels::PixelFormatEnum,
 };
 
-use super::{constants::{W_WIDTH, W_HEIGHT}, game_object::GameObject, matrices};
+use super::{constants::{W_WIDTH, W_HEIGHT}, game_object::GameObject, matrices, skybox_shader::SkyboxShader};
 
 const SHOW_FPS: bool = false;
 
@@ -21,6 +21,7 @@ pub struct Game<'a> {
     events_loop: &'a mut EventPump,
     gl_context: &'a GLContext,
     pub shader: Shader3D<'a>,
+    pub skybox_shader: SkyboxShader<'a>,
     pub model_matrix: RefCell<ModelMatrix>,
     pub view_matrix: RefCell<ViewMatrix>,
     pub projection_matrix: RefCell<ProjectionMatrix>,
@@ -48,7 +49,7 @@ impl<'a> Game<'a> {
         let view_matrix = matrices::ViewMatrix::new();
         let mut projection_matrix = matrices::ProjectionMatrix::new();
 
-        shader.use_program();
+        shader.use_shader();
         shader.set_view_matrix(view_matrix.get_matrix().as_slice());
         projection_matrix.set_perspective(60.0, W_WIDTH as f32 / W_HEIGHT as f32, 0.5, 300.0);
         shader.set_projection_matrix(projection_matrix.get_matrix().as_slice());
@@ -59,6 +60,7 @@ impl<'a> Game<'a> {
             events_loop,
             gl_context,
             shader,
+            skybox_shader: SkyboxShader::new(gl),
             model_matrix: RefCell::new(model_matrix),
             view_matrix: RefCell::new(view_matrix),
             projection_matrix: RefCell::new(projection_matrix),
@@ -76,8 +78,9 @@ impl<'a> Game<'a> {
     pub fn create_scene(&mut self) {
         self.server_connection.connect();
 
-        self.add_game_object(Track::new(self.gl, self));
-        self.add_game_object(Ground::new(self.gl, self));
+        self.add_game_object(Skybox::new(self.gl, self));
+        // self.add_game_object(Track::new(self.gl, self));
+        // self.add_game_object(Ground::new(self.gl, self));
         self.add_game_object(PlayerCar::new(self.gl, self));
         // self.add_game_object(FreecamController::new(self.gl));
     }
@@ -108,6 +111,36 @@ impl<'a> Game<'a> {
             
             tex_id
         }
+    }
+
+    pub fn load_cubemap(&self, face_paths: &Vec<&str>) -> NativeTexture {
+        let tex_id = unsafe {
+            let tex_id = self.gl.create_texture().unwrap();
+            self.gl.bind_texture(TEXTURE_CUBE_MAP, Some(tex_id));
+            
+            tex_id
+        };
+
+        for (i, face) in face_paths.iter().enumerate() {
+            let loader = sdl2::rwops::RWops::from_file(Path::new(face), "r").expect("Failed to load texture for cube map");
+            let surface = loader.load_png().unwrap().convert_format(PixelFormatEnum::RGBA32).unwrap();
+            let width = surface.width();
+            let height = surface.height();
+
+            unsafe {
+                self.gl.tex_image_2d(TEXTURE_CUBE_MAP_POSITIVE_X + i as u32, 0, RGB as i32, width as i32, height as i32, 0, RGB, UNSIGNED_BYTE, surface.without_lock());
+            }
+        }
+
+        unsafe {
+            self.gl.tex_parameter_i32(TEXTURE_CUBE_MAP, TEXTURE_MIN_FILTER, LINEAR as i32);
+            self.gl.tex_parameter_i32(TEXTURE_CUBE_MAP, TEXTURE_MAG_FILTER, LINEAR as i32);
+            self.gl.tex_parameter_i32(TEXTURE_CUBE_MAP, TEXTURE_WRAP_S, CLAMP_TO_EDGE as i32);
+            self.gl.tex_parameter_i32(TEXTURE_CUBE_MAP, TEXTURE_WRAP_T, CLAMP_TO_EDGE as i32);
+            self.gl.tex_parameter_i32(TEXTURE_CUBE_MAP, TEXTURE_WRAP_R, CLAMP_TO_EDGE as i32);
+        }
+
+        tex_id
     }
 
     pub fn update(&mut self) {
@@ -162,8 +195,8 @@ impl<'a> Game<'a> {
     pub fn display(&mut self) {
         unsafe {
             self.gl.enable(DEPTH_TEST);
-            self.gl.enable(BLEND);
-            self.gl.blend_func(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
+            // self.gl.enable(BLEND);
+            // self.gl.blend_func(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
             self.gl.clear_color(0.03, 0.04, 0.13, 1.0);
             self.gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
             self.gl.viewport(0, 0, self.window.size().0 as i32, self.window.size().1 as i32);

@@ -146,7 +146,7 @@ impl<'a> Shader3D<'a> {
         }
     }
 
-    pub fn use_program(&self) {
+    pub fn use_shader(&self) {
         unsafe {
             self.gl.use_program(Some(self.rendering_program_id));
         }
