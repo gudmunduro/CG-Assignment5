@@ -207,10 +207,10 @@ impl<'a> Game<'a> {
 
         self.model_matrix.get_mut().load_identity();
 
-        self.shader.set_light_position(&[0.0, 0.0, 8.0, 1.0]);
-        self.shader.set_light_diffuse(&[0.5, 0.5, 0.5, 0.0]);
-        self.shader.set_light_ambient(&[0.5, 0.5, 0.5, 0.0]);
-        self.shader.set_light_specular(&[1.0, 1.0, 1.0, 0.0]);
+        self.shader.set_light_position(&[43.0, 80.0, -120.0, 1.0]);
+        self.shader.set_light_diffuse(&[0.85, 0.59, 0.15, 1.0]);
+        self.shader.set_light_ambient(&[0.85 / 2.0, 0.59 / 2.0, 0.15 / 2.0, 1.0]);
+        self.shader.set_light_specular(&[0.85, 0.59, 0.15, 1.0]);
         self.shader.set_eye_position(view_matrix.eye.x, view_matrix.eye.y, view_matrix.eye.z);
 
         for object in &self.game_objects {

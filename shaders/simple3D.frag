@@ -1,7 +1,7 @@
 const int LIGHT_COUNT = 1;
 const float fog_maxdist = 250.0;
 const float fog_mindist = 0.1;
-const vec4 fog_color = vec4(0.77, 0.71, 0.62, 1.0);
+const vec4 fog_color = vec4(0.89, 0.67, 0.36, 1.0);
 
 uniform vec4 u_light_diffuse[LIGHT_COUNT];
 uniform vec4 u_light_ambient[LIGHT_COUNT];

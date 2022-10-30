@@ -63,11 +63,12 @@ impl<'a> GameObject<'a> for TrackUCornerSegment<'a> {
 
         let mut model_matrix = game.model_matrix.borrow_mut();
 
-        game.shader.set_material_ambient(&Color::new(0.5, 0.5, 0.5));
-        game.shader.set_material_diffuse(&Color::new(0.7, 0.7, 0.7));
+        // Pavement
+        game.shader.set_material_ambient(&Color::new(0.84 / 1.5, 0.73 / 1.5, 0.67 / 1.5));
+        game.shader.set_material_diffuse(&Color::new(0.84, 0.73, 0.67));
         game.shader
-            .set_material_specular(&Color::new(1.0, 1.0, 1.0));
-        game.shader.set_shininess(3.0);
+            .set_material_specular(&Color::new(0.2, 0.2, 0.2));
+        game.shader.set_shininess(100.0);
 
         model_matrix.push_stack();
         model_matrix.add_translate(self.position.x, TRACK_ELEVATION + 0.1, self.position.z);
@@ -77,10 +78,11 @@ impl<'a> GameObject<'a> for TrackUCornerSegment<'a> {
         self.segment_object.draw(&game.shader, &self.road_texture);
         model_matrix.pop_stack();
 
+        // Platform
         game.shader
-            .set_material_ambient(&Color::new(0.66 / 1.5, 0.66 / 1.5, 0.65 / 1.5));
+            .set_material_ambient(&Color::new(0.96 / 1.5, 0.58 / 1.5, 0.38 / 1.5));
         game.shader
-            .set_material_diffuse(&Color::new(0.66, 0.66, 0.65));
+            .set_material_diffuse(&Color::new(0.96, 0.58, 0.38));
         game.shader
             .set_material_specular(&Color::new(0.1, 0.1, 0.1));
         game.shader.set_shininess(100.0);
