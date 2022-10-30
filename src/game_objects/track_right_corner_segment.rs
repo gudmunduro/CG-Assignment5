@@ -75,12 +75,12 @@ impl<'a> GameObject<'a> for TrackRightCornerSegment<'a> {
         model_matrix.pop_stack();
 
         game.shader
-            .set_material_ambient(&Color::new(0.89 / 2.0, 0.62 / 2.0, 0.14 / 2.0));
+            .set_material_ambient(&Color::new(0.66 / 1.5, 0.66 / 1.5, 0.65 / 1.5));
         game.shader
-            .set_material_diffuse(&Color::new(0.89, 0.62, 0.14));
+            .set_material_diffuse(&Color::new(0.66, 0.66, 0.65));
         game.shader
-            .set_material_specular(&Color::new(1.0, 1.0, 1.0));
-        game.shader.set_shininess(3.0);
+            .set_material_specular(&Color::new(0.1, 0.1, 0.1));
+        game.shader.set_shininess(100.0);
 
         model_matrix.push_stack();
         model_matrix.add_translate(
