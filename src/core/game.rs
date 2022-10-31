@@ -6,20 +6,21 @@ use crate::{
         shader::Shader3D,
     },
     game_objects::{
-        cars::network_car::NetworkCar, cars::player_car::PlayerCar, environment::skybox::Skybox,
+        cars::network_car::NetworkCar, cars::player_car::PlayerCar, environment::{skybox::Skybox, cactus::{Cactus, CactusType}},
         track::track::Track,
     },
     network::server_connection::{NetworkEvent, ServerConnection},
     objects::{cube::Cube, mesh_model::MeshModel},
 };
 use glow::*;
+use nalgebra::Vector3;
 use sdl2::{
     event::Event, image::ImageRWops, joystick::Joystick, keyboard::Keycode,
     pixels::PixelFormatEnum, video::Window, EventPump, JoystickSubsystem,
 };
 
 use super::{
-    constants::{W_HEIGHT, W_WIDTH},
+    constants::{W_HEIGHT, W_WIDTH, MODEL_LOCATION},
     game_object::GameObject,
     matrices,
     obj_loader::load_obj_file,
@@ -103,10 +104,10 @@ impl<'a> Game<'a> {
     pub fn create_scene(&mut self) {
         // Load the models
         self.car_model = Rc::new(
-            load_obj_file("./models", "car.obj", self.gl, self).expect("Failed to load car model"),
+            load_obj_file(MODEL_LOCATION, "car.obj", self.gl, self).expect("Failed to load car model"),
         );
         self.wheel_model = Rc::new(
-            load_obj_file("./models", "wheel.obj", self.gl, self)
+            load_obj_file(MODEL_LOCATION, "wheel.obj", self.gl, self)
                 .expect("Failed to load wheel model"),
         );
 
@@ -119,7 +120,26 @@ impl<'a> Game<'a> {
             self.gl,
             self,
         ));
-        // self.add_game_object(FreecamController::new(self.gl));
+
+        // Create cactuses
+        self.add_game_object(Cactus::new(Vector3::new(20.0, 30.0, 200.0), 0.0, CactusType::Small, self.gl, self));
+        self.add_game_object(Cactus::new(Vector3::new(40.0, 30.0, 220.0), 100f32.to_radians(), CactusType::Large, self.gl, self));
+        self.add_game_object(Cactus::new(Vector3::new(50.0, 30.0, 250.0), 0.0, CactusType::Small, self.gl, self));
+        self.add_game_object(Cactus::new(Vector3::new(75.0, 30.0, 250.0), 0.0, CactusType::Small, self.gl, self));
+        self.add_game_object(Cactus::new(Vector3::new(295.0, 30.0, 232.0), 0.0, CactusType::Large, self.gl, self));
+        self.add_game_object(Cactus::new(Vector3::new(234.0, 30.0, 188.0), 75f32.to_radians(), CactusType::Small, self.gl, self));
+        self.add_game_object(Cactus::new(Vector3::new(297.0, 30.0, 82.0), 0.0, CactusType::Large, self.gl, self));
+        self.add_game_object(Cactus::new(Vector3::new(68.0, 30.0, 51.0), 0.0, CactusType::Small, self.gl, self));
+        self.add_game_object(Cactus::new(Vector3::new(64.0, 30.0, 11.0), 45f32.to_radians(), CactusType::Small, self.gl, self));
+        self.add_game_object(Cactus::new(Vector3::new(58.0, 30.0, -19.0), 0.0, CactusType::Large, self.gl, self));
+        self.add_game_object(Cactus::new(Vector3::new(-11.0, 30.0, 283.0), 0.0, CactusType::Large, self.gl, self));
+        self.add_game_object(Cactus::new(Vector3::new(332.0, 30.0, 265.0), 45f32.to_radians(), CactusType::Small, self.gl, self));
+        self.add_game_object(Cactus::new(Vector3::new(346.0, 30.0, 97.0), 0.0, CactusType::Small, self.gl, self));
+        self.add_game_object(Cactus::new(Vector3::new(147.0, 30.0, -32.0), 75f32.to_radians(), CactusType::Large, self.gl, self));
+        self.add_game_object(Cactus::new(Vector3::new(64.0, 30.0, -96.0), 0.0, CactusType::Small, self.gl, self));
+        self.add_game_object(Cactus::new(Vector3::new(-1.0, 30.0, -104.0), 0.0, CactusType::Small, self.gl, self));
+        self.add_game_object(Cactus::new(Vector3::new(101.0, 30.0, -23.0), 45f32.to_radians(), CactusType::Large, self.gl, self));
+        self.add_game_object(Cactus::new(Vector3::new(125.0, 30.0, 11.0), 0.0, CactusType::Large, self.gl, self));
     }
 
     #[inline(always)]
