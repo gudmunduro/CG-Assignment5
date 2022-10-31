@@ -1,4 +1,4 @@
-use std::f32;
+use std::{f32, rc::Rc};
 
 use glow::*;
 use nalgebra::{Vector3, Vector4, Vector2};
@@ -11,7 +11,7 @@ use crate::{
         obj_loader::load_obj_file, color::Color,
     },
     objects::mesh_model::MeshModel,
-    utils::car_sim::{self, CarState},
+    utils::{car_sim::{self, CarState}, line_contains_point},
 };
 
 pub enum ViewState {
@@ -20,8 +20,8 @@ pub enum ViewState {
 }
 
 pub struct Car<'a> {
-    car_model: MeshModel<'a>,
-    wheel_model: MeshModel<'a>,
+    car_model: Rc<MeshModel<'a>>,
+    wheel_model: Rc<MeshModel<'a>>,
     car_state: CarState,
     throttle_state: bool,
     y_velocity: f32,
@@ -32,11 +32,7 @@ pub struct Car<'a> {
 }
 
 impl<'a> Car<'a> {
-    pub fn new(enable_collision_check: bool, gl: &'a Context, game: &Game) -> Car<'a> {
-        let car_model =
-            load_obj_file("./models", "car.obj", gl, game).expect("Failed to load car model");
-        let wheel_model =
-            load_obj_file("./models", "wheel.obj", gl, game).expect("Failed to load wheel model");
+    pub fn new(enable_collision_check: bool, car_model: Rc<MeshModel<'a>>, wheel_model: Rc<MeshModel<'a>>, gl: &'a Context, game: &Game) -> Car<'a> {
         let mut car_state = CarState::new();
         car_state.position_wc.y = 40.0;
 
@@ -83,16 +79,18 @@ impl<'a> Car<'a> {
         );
     }
 
-    fn full_car_cube(&self, game: &Game) -> [Vector3<f32>; 8] {
+    fn full_car_cube(&self, game: &Game, custom_car_state: Option<&CarState>) -> [Vector3<f32>; 8] {
+        let car_state = custom_car_state.unwrap_or(&self.car_state);
+
         let mut model_matrix = game.model_matrix.borrow_mut();
 
         model_matrix.push_stack();
         model_matrix.add_translate(
-            self.car_state.position_wc.x,
-            self.car_state.position_wc.y,
-            self.car_state.position_wc.z,
+            car_state.position_wc.x,
+            car_state.position_wc.y,
+            car_state.position_wc.z,
         );
-        model_matrix.add_rotation(0.0, self.car_state.angle, 0.0);
+        model_matrix.add_rotation(0.0, car_state.angle, 0.0);
         model_matrix.add_scale(5.0, 3.0, 10.0);
 
         let bottom_left_inner_local = Vector4::new(-0.5, -0.5, -0.5, 1.0);
@@ -180,45 +178,23 @@ impl<'a> Car<'a> {
                 }
             }
             InfiniteYPlaneCollider(p0, p1) => {
-                let corners = self.full_car_cube(game);
+                let corners = self.full_car_cube(game, None);
+                let mut car_state_predicted = self.car_state.clone();
+                car_state_predicted.perform_physics_time_step(game.delta_time, self.handbrake, self.handbrake);
+                let future_corners = self.full_car_cube(game, Some(&car_state_predicted));
 
-                let line_contains_pint = |start: &Vector2<f32>, end: &Vector2<f32>, point: &Vector2<f32>| {
-                    // We need to handle the cases when the line goes in both directions
-                    if start.x <= end.x {
-                        if !(point.x >= start.x && point.x <= end.x) {
-                            return false;
-                        }
-                    } else if start.x > end.x {
-                        if !(point.x >= end.x && point.x <= start.x) {
-                            return false;
-                        }
-                    }
-                
-                    if start.y <= end.y {
-                        if !(point.y >= start.y && point.y <= end.y) {
-                            return false;
-                        }
-                    } else if start.y > end.y {
-                        if !(point.y >= end.y && point.y <= start.y) {
-                            return false;
-                        }
-                    }
-                
-                    return true;
-                };
-
-                for corner in &corners[..4] {
+                for (corner, f_corner) in corners[..4].iter().zip(&future_corners[..4]) {
                     let v = (p1 - p0).xz();
 
                     let a_mat = corner.xz();
                     let b_mat = p0.xz();
-                    let c = self.car_state.velocity_wc.xz();
+                    let c = (f_corner.xz() - corner.xz()) / game.delta_time;
                     let n = Vector2::new(-v.y, v.x);
 
                     let t_hit = (n.dot(&(b_mat-a_mat))) / (n.dot(&c));
                     let p_hit = a_mat + t_hit * c;
 
-                    if line_contains_pint(&p0.xz(), &p1.xz(), &p_hit) && t_hit <= game.delta_time * 1.5 && t_hit > 0.0 {
+                    if line_contains_point(&p0.xz(), &p1.xz(), &p_hit) && t_hit <= game.delta_time && t_hit > 0.0 {
                         let reflected = c - ((2.0 * (c.dot(&n))) / (n.dot(&n))) * n;
 
                         self.car_state.velocity_wc.x = reflected.x;
@@ -315,6 +291,10 @@ impl<'a> GameObject<'a> for Car<'a> {
     fn on_event(&mut self, game: &Game, event: &Event) {}
 
     fn update(&mut self, game: &Game, gl: &'a Context) {
+        if self.enable_collision_check {
+            self.check_all_collision(game);
+        }
+
         self.car_state
             .perform_physics_time_step(game.delta_time, self.handbrake, self.handbrake);
 
@@ -324,9 +304,6 @@ impl<'a> GameObject<'a> for Car<'a> {
         }
 
         self.update_gravity(game);
-        if self.enable_collision_check {
-            self.check_all_collision(game);
-        }
     }
 
     fn display(&self, game: &Game, gl: &'a Context) {

@@ -13,6 +13,7 @@ enum Connection {
 pub enum NetworkEvent {
     PlayerConnected { player_id: u8 },
     PlayerDisconnected { player_id: u8 },
+    MoveToStartPos,
 }
 
 pub struct ServerConnection {
@@ -92,6 +93,10 @@ impl ServerConnection {
         self.last_status.get(&player_id)
     }
 
+    pub fn player_id(&self) -> Option<u8> {
+        self.player_id
+    }
+
     pub fn update(&mut self) {
         let socket = match &self.connection {
             Connection::Connected(s) => s,
@@ -123,6 +128,7 @@ impl ServerConnection {
                 }
                 Inform { player_id } => {
                     self.player_id = Some(player_id);
+                    self.game_events.get_mut().push_back(NetworkEvent::MoveToStartPos);
                     println!("Playing as player {player_id}");
                 }
                 StatusUpdate(status) => {

@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::VecDeque, path::Path, slice, time::Instant};
+use std::{cell::RefCell, collections::VecDeque, path::Path, slice, time::Instant, rc::Rc};
 
 use crate::{
     core::{
@@ -10,7 +10,7 @@ use crate::{
         player_car::PlayerCar, skybox::Skybox, track::Track, track_segment::TrackSegment,
     },
     network::server_connection::{NetworkEvent, ServerConnection},
-    objects::cube::Cube,
+    objects::{cube::Cube, mesh_model::MeshModel},
 };
 use glow::*;
 use sdl2::{
@@ -27,6 +27,7 @@ use super::{
     constants::{W_HEIGHT, W_WIDTH},
     game_object::GameObject,
     matrices,
+    obj_loader::load_obj_file,
 };
 
 const SHOW_FPS: bool = false;
@@ -50,6 +51,8 @@ pub struct Game<'a> {
     pub server_connection: ServerConnection,
     pub frame_sum: i32,
     pub frame_time_sum: f32,
+    pub car_model: Rc<MeshModel<'a>>,
+    pub wheel_model: Rc<MeshModel<'a>>,
 }
 
 impl<'a> Game<'a> {
@@ -91,16 +94,27 @@ impl<'a> Game<'a> {
             server_connection: ServerConnection::new(),
             frame_sum: 0,
             frame_time_sum: 0.0,
+            // Temporary initialize the car model as empty as game needs to exit before we load it
+            car_model: Rc::new(MeshModel::new(gl)),
+            wheel_model: Rc::new(MeshModel::new(gl)),
         }
     }
 
     pub fn create_scene(&mut self) {
+        // Initilize network
         self.server_connection.connect();
 
+        // Load the models
+        self.car_model =
+            Rc::new(load_obj_file("./models", "car.obj", self.gl, self).expect("Failed to load car model"));
+        self.wheel_model = Rc::new(load_obj_file("./models", "wheel.obj", self.gl, self)
+            .expect("Failed to load wheel model"));
+
+        // Create the level
         self.add_game_object(Skybox::new(self.gl, self));
         self.add_game_object(Track::new(self.gl, self));
         // self.add_game_object(Ground::new(self.gl, self));
-        self.add_game_object(PlayerCar::new(self.gl, self));
+        self.add_game_object(PlayerCar::new(self.car_model.clone(), self.wheel_model.clone(), self.gl, self));
         // self.add_game_object(FreecamController::new(self.gl));
     }
 
@@ -227,7 +241,12 @@ impl<'a> Game<'a> {
             self.joystick = self.joystick_subsystem.open(0).ok();
         }
         // Joystick was disconnected
-        else if self.joystick.as_ref().map(|j| !j.attached()).unwrap_or(false) {
+        else if self
+            .joystick
+            .as_ref()
+            .map(|j| !j.attached())
+            .unwrap_or(false)
+        {
             self.joystick = None;
         }
 
@@ -256,15 +275,16 @@ impl<'a> Game<'a> {
                 .server_connection
                 .game_events
                 .get_mut()
-                .back()
+                .front()
                 .map(|e| e.clone());
 
+            use NetworkEvent::*;
             match event {
-                Some(NetworkEvent::PlayerConnected { player_id }) => {
-                    self.add_game_object(NetworkCar::new(player_id, self.gl, self));
-                    self.server_connection.game_events.get_mut().pop_back();
+                Some(PlayerConnected { player_id }) => {
+                    self.add_game_object(NetworkCar::new(player_id, self.car_model.clone(), self.wheel_model.clone(), self.gl, self));
+                    self.server_connection.game_events.get_mut().pop_front();
                 }
-                Some(NetworkEvent::PlayerDisconnected { .. }) | None => break,
+                Some(PlayerDisconnected { .. } | MoveToStartPos) | None => break,
             }
         }
 

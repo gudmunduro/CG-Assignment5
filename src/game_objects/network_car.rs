@@ -1,7 +1,9 @@
+use std::rc::Rc;
+
 use glow::Context;
 use nalgebra::Vector3;
 
-use crate::{core::{game::Game, game_object::{GameObject, Collider}}, network::server_connection::NetworkEvent};
+use crate::{core::{game::Game, game_object::{GameObject, Collider}}, network::server_connection::NetworkEvent, objects::mesh_model::MeshModel};
 
 use super::car::Car;
 
@@ -13,8 +15,8 @@ pub struct NetworkCar<'a> {
 }
 
 impl<'a> NetworkCar<'a> {
-    pub fn new (player_id: u8, gl: &'a Context, game: &Game) -> NetworkCar<'a> {
-        let mut car = Car::new(true, gl, game);
+    pub fn new (player_id: u8, car_model: Rc<MeshModel<'a>>, wheel_model: Rc<MeshModel<'a>>, gl: &'a Context, game: &Game) -> NetworkCar<'a> {
+        let mut car = Car::new(false, car_model, wheel_model, gl, game);
         car.set_position(Vector3::new(5.0, 35.0, 0.0));
 
         NetworkCar { player_id, car, collider: None }
@@ -42,13 +44,13 @@ impl<'a> GameObject<'a> for NetworkCar<'a> {
 
         loop {
             let mut game_events = game.server_connection.game_events.borrow_mut();
-            let event = game_events.back();
+            let event = game_events.front();
             
             match event {
                 Some(NetworkEvent::PlayerDisconnected { player_id }) if self.player_id == *player_id  => {
                     // Delete this car if the player has disconnected
                     game.objects_to_delete.borrow_mut().push_back(self as *const _ as *const usize);
-                    game_events.pop_back();
+                    game_events.pop_front();
                 }
                 _ => break
             }

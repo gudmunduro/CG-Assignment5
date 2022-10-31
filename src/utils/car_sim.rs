@@ -23,6 +23,7 @@ const CAR_WHEEL_WIDTH: f32 = 0.3;
 
 const GRAVITY: f32 = 9.8;
 
+#[derive(Clone)]
 pub struct CarState {
     pub position_wc: Vector3<f32>,
     pub velocity_wc: Vector3<f32>,

@@ -1,12 +1,12 @@
-use std::f32;
+use std::{f32, rc::Rc};
 
 use glow::Context;
 use nalgebra::Vector3;
 use sdl2::{event::Event, keyboard::Keycode};
 
-use crate::{core::{game_object::GameObject, game::Game}, game_objects::car::ViewState};
+use crate::{core::{game_object::GameObject, game::Game}, game_objects::car::ViewState, objects::mesh_model::MeshModel, network::server_connection::NetworkEvent};
 
-use super::car::Car;
+use super::{car::Car, track_segment::TRACK_ELEVATION};
 
 const LOOK_DIST: f32 = 0.9;
 
@@ -15,8 +15,8 @@ pub struct PlayerCar<'a> {
 }
 
 impl<'a> PlayerCar<'a> {
-    pub fn new(gl: &'a Context, game: &Game) -> PlayerCar<'a> {
-        let car = Car::new(true, gl, game);
+    pub fn new(car_model: Rc<MeshModel<'a>>, wheel_model: Rc<MeshModel<'a>>, gl: &'a Context, game: &Game) -> PlayerCar<'a> {
+        let car = Car::new(true, car_model, wheel_model, gl, game);
 
         PlayerCar { car }
     }
@@ -39,6 +39,18 @@ impl<'a> PlayerCar<'a> {
         let left_x_axis = joystick.axis(0).unwrap_or(0);
         // let left_y_axis = joystick.axis(1).unwrap_or(0);
         self.car.set_steering_angle(-(self.i16_range_to_float(left_x_axis) * 2.0 * (0.25 * f32::consts::PI / 4.0) - (0.25 * f32::consts::PI / 4.0)));
+    }
+
+    fn spawn_position(player_id: u8) -> Vector3<f32> {
+        match player_id {
+            1 => Vector3::new(-4.5, TRACK_ELEVATION, 120.0),
+            2 => Vector3::new(5.0, TRACK_ELEVATION, 100.0),
+            3 => Vector3::new(-4.5, TRACK_ELEVATION, 80.0),
+            4 => Vector3::new(5.0, TRACK_ELEVATION, 60.0),
+            5 => Vector3::new(-4.5, TRACK_ELEVATION, 40.0),
+            6 => Vector3::new(5.0, TRACK_ELEVATION, 20.0),
+            _ => Vector3::new(-4.5, TRACK_ELEVATION, 0.0),
+        }
     }
 }
 
@@ -95,7 +107,10 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
                     // TODO: Remove this after testing
                     L => {
                         self.car.set_y_velocity(20.0);
+                    }
+                    P => {
                         let pos = self.car.position();
+                        println!("Position: {}, {}, {}", pos.x, pos.y, pos.z);
                     }
                     _ => (),
                 }
@@ -111,6 +126,19 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
 
         // Send status update
         if game.server_connection.is_multiplayer() {
+            loop {
+                let mut game_events = game.server_connection.game_events.borrow_mut();
+                let event = game_events.front();
+                
+                match event {
+                    Some(NetworkEvent::MoveToStartPos) => {
+                        self.car.set_position(PlayerCar::spawn_position(game.server_connection.player_id().unwrap_or(1)));
+                        game_events.pop_front();
+                    }
+                    _ => break
+                }
+            }
+
             game.server_connection.send_status_update(self.car.position(), self.car.angle(), self.car.steering_angle());
         }
 
@@ -135,4 +163,5 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
     fn display(&self, game: &Game, gl: &'a Context) {
         self.car.display(game, gl);
     }
+
 }
