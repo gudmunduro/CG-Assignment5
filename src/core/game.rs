@@ -1,17 +1,33 @@
-use std::{time::Instant, cell::RefCell, path::Path, slice, collections::VecDeque};
+use std::{cell::RefCell, collections::VecDeque, path::Path, slice, time::Instant};
 
-use crate::{core::{
-    matrices::{ModelMatrix, ProjectionMatrix, ViewMatrix},
-    shader::Shader3D,
-}, objects::cube::Cube, game_objects::{car::Car, freecam_controller::FreecamController, ground::Ground, track_segment::TrackSegment, track::Track, player_car::PlayerCar, network_car::NetworkCar, skybox::Skybox}, network::server_connection::{ServerConnection, NetworkEvent}};
+use crate::{
+    core::{
+        matrices::{ModelMatrix, ProjectionMatrix, ViewMatrix},
+        shader::Shader3D,
+    },
+    game_objects::{
+        car::Car, freecam_controller::FreecamController, ground::Ground, network_car::NetworkCar,
+        player_car::PlayerCar, skybox::Skybox, track::Track, track_segment::TrackSegment,
+    },
+    network::server_connection::{NetworkEvent, ServerConnection},
+    objects::cube::Cube,
+};
 use glow::*;
 use sdl2::{
+    event::Event,
     image::ImageRWops,
+    joystick::Joystick,
+    keyboard::Keycode,
+    pixels::PixelFormatEnum,
     video::{GLContext, Window},
-    EventPump, event::Event, keyboard::Keycode, pixels::PixelFormatEnum,
+    EventPump, JoystickSubsystem,
 };
 
-use super::{constants::{W_WIDTH, W_HEIGHT}, game_object::GameObject, matrices};
+use super::{
+    constants::{W_HEIGHT, W_WIDTH},
+    game_object::GameObject,
+    matrices,
+};
 
 const SHOW_FPS: bool = false;
 
@@ -20,6 +36,8 @@ pub struct Game<'a> {
     window: &'a Window,
     events_loop: &'a mut EventPump,
     gl_context: &'a GLContext,
+    joystick_subsystem: &'a JoystickSubsystem,
+    pub joystick: Option<Joystick>,
     pub shader: Shader3D<'a>,
     pub model_matrix: RefCell<ModelMatrix>,
     pub view_matrix: RefCell<ViewMatrix>,
@@ -31,7 +49,7 @@ pub struct Game<'a> {
     pub delta_time: f32,
     pub server_connection: ServerConnection,
     pub frame_sum: i32,
-    pub frame_time_sum: f32
+    pub frame_time_sum: f32,
 }
 
 impl<'a> Game<'a> {
@@ -40,6 +58,7 @@ impl<'a> Game<'a> {
         window: &'a Window,
         events_loop: &'a mut EventPump,
         gl_context: &'a GLContext,
+        joystick_subsystem: &'a JoystickSubsystem,
     ) -> Game<'a> {
         let shader = Shader3D::new(&gl);
         let cube = Cube::new(&gl);
@@ -58,6 +77,8 @@ impl<'a> Game<'a> {
             window,
             events_loop,
             gl_context,
+            joystick_subsystem,
+            joystick: None,
             shader,
             model_matrix: RefCell::new(model_matrix),
             view_matrix: RefCell::new(view_matrix),
@@ -85,28 +106,48 @@ impl<'a> Game<'a> {
 
     #[inline(always)]
     fn add_game_object(&mut self, object: impl GameObject<'a> + 'a) {
-        self.game_objects.push(Box::new(RefCell::new(object)) as Box<RefCell<dyn GameObject<'a>>>);
+        self.game_objects
+            .push(Box::new(RefCell::new(object)) as Box<RefCell<dyn GameObject<'a>>>);
     }
 
     pub fn load_texture(&self, path_string: &str, repeat: bool) -> NativeTexture {
-        let loader = sdl2::rwops::RWops::from_file(Path::new(path_string), "r").expect("Failed to load texture");
-        let surface = loader.load_png().unwrap().convert_format(PixelFormatEnum::RGBA32).unwrap();
+        let loader = sdl2::rwops::RWops::from_file(Path::new(path_string), "r")
+            .expect("Failed to load texture");
+        let surface = loader
+            .load_png()
+            .unwrap()
+            .convert_format(PixelFormatEnum::RGBA32)
+            .unwrap();
         let width = surface.width();
         let height = surface.height();
 
         unsafe {
             let tex_id = self.gl.create_texture().unwrap();
             self.gl.bind_texture(TEXTURE_2D, Some(tex_id));
-            self.gl.tex_parameter_i32(TEXTURE_2D, TEXTURE_MAG_FILTER, LINEAR as i32);
-            self.gl.tex_parameter_i32(TEXTURE_2D, TEXTURE_MIN_FILTER, LINEAR as i32);
+            self.gl
+                .tex_parameter_i32(TEXTURE_2D, TEXTURE_MAG_FILTER, LINEAR as i32);
+            self.gl
+                .tex_parameter_i32(TEXTURE_2D, TEXTURE_MIN_FILTER, LINEAR as i32);
 
             if repeat {
-                self.gl.tex_parameter_i32(TEXTURE_2D, TEXTURE_WRAP_S, REPEAT as i32);
-                self.gl.tex_parameter_i32(TEXTURE_2D, TEXTURE_WRAP_T, REPEAT as i32);
+                self.gl
+                    .tex_parameter_i32(TEXTURE_2D, TEXTURE_WRAP_S, REPEAT as i32);
+                self.gl
+                    .tex_parameter_i32(TEXTURE_2D, TEXTURE_WRAP_T, REPEAT as i32);
             }
 
-            self.gl.tex_image_2d(TEXTURE_2D, 0, RGBA as i32, width as i32, height as i32, 0, RGBA, UNSIGNED_BYTE, surface.without_lock());
-            
+            self.gl.tex_image_2d(
+                TEXTURE_2D,
+                0,
+                RGBA as i32,
+                width as i32,
+                height as i32,
+                0,
+                RGBA,
+                UNSIGNED_BYTE,
+                surface.without_lock(),
+            );
+
             tex_id
         }
     }
@@ -115,27 +156,47 @@ impl<'a> Game<'a> {
         let tex_id = unsafe {
             let tex_id = self.gl.create_texture().unwrap();
             self.gl.bind_texture(TEXTURE_CUBE_MAP, Some(tex_id));
-            
+
             tex_id
         };
 
         for (i, face) in face_paths.iter().enumerate() {
-            let loader = sdl2::rwops::RWops::from_file(Path::new(face), "r").expect("Failed to load texture for cube map");
-            let surface = loader.load_png().unwrap().convert_format(PixelFormatEnum::RGBA32).unwrap();
+            let loader = sdl2::rwops::RWops::from_file(Path::new(face), "r")
+                .expect("Failed to load texture for cube map");
+            let surface = loader
+                .load_png()
+                .unwrap()
+                .convert_format(PixelFormatEnum::RGBA32)
+                .unwrap();
             let width = surface.width();
             let height = surface.height();
 
             unsafe {
-                self.gl.tex_image_2d(TEXTURE_CUBE_MAP_POSITIVE_X + i as u32, 0, RGB as i32, width as i32, height as i32, 0, RGB, UNSIGNED_BYTE, surface.without_lock());
+                self.gl.tex_image_2d(
+                    TEXTURE_CUBE_MAP_POSITIVE_X + i as u32,
+                    0,
+                    RGB as i32,
+                    width as i32,
+                    height as i32,
+                    0,
+                    RGB,
+                    UNSIGNED_BYTE,
+                    surface.without_lock(),
+                );
             }
         }
 
         unsafe {
-            self.gl.tex_parameter_i32(TEXTURE_CUBE_MAP, TEXTURE_MIN_FILTER, LINEAR as i32);
-            self.gl.tex_parameter_i32(TEXTURE_CUBE_MAP, TEXTURE_MAG_FILTER, LINEAR as i32);
-            self.gl.tex_parameter_i32(TEXTURE_CUBE_MAP, TEXTURE_WRAP_S, CLAMP_TO_EDGE as i32);
-            self.gl.tex_parameter_i32(TEXTURE_CUBE_MAP, TEXTURE_WRAP_T, CLAMP_TO_EDGE as i32);
-            self.gl.tex_parameter_i32(TEXTURE_CUBE_MAP, TEXTURE_WRAP_R, CLAMP_TO_EDGE as i32);
+            self.gl
+                .tex_parameter_i32(TEXTURE_CUBE_MAP, TEXTURE_MIN_FILTER, LINEAR as i32);
+            self.gl
+                .tex_parameter_i32(TEXTURE_CUBE_MAP, TEXTURE_MAG_FILTER, LINEAR as i32);
+            self.gl
+                .tex_parameter_i32(TEXTURE_CUBE_MAP, TEXTURE_WRAP_S, CLAMP_TO_EDGE as i32);
+            self.gl
+                .tex_parameter_i32(TEXTURE_CUBE_MAP, TEXTURE_WRAP_T, CLAMP_TO_EDGE as i32);
+            self.gl
+                .tex_parameter_i32(TEXTURE_CUBE_MAP, TEXTURE_WRAP_R, CLAMP_TO_EDGE as i32);
         }
 
         tex_id
@@ -155,6 +216,22 @@ impl<'a> Game<'a> {
             self.frame_sum += 1;
         }
 
+        // Joystick was just connected
+        if self
+            .joystick_subsystem
+            .num_joysticks()
+            .map(|v| v > 0)
+            .unwrap_or(false)
+            && self.joystick.is_none()
+        {
+            self.joystick = self.joystick_subsystem.open(0).ok();
+        }
+        // Joystick was disconnected
+        else if self.joystick.as_ref().map(|j| !j.attached()).unwrap_or(false) {
+            self.joystick = None;
+        }
+
+        // Recieve and handle packages for multiplayer
         self.server_connection.update();
 
         // Delete all game objects that were requested to be deleted
@@ -165,23 +242,29 @@ impl<'a> Game<'a> {
 
                 match object_to_delte {
                     Some(object) => {
-                        self.game_objects.retain(|o| o.as_ptr() as *const _ as *const usize != object);
+                        self.game_objects
+                            .retain(|o| o.as_ptr() as *const _ as *const usize != object);
                     }
-                    None => ()
+                    None => (),
                 }
             }
         }
 
         // Consume only the events that can be handled by the game struct
         loop {
-            let event = self.server_connection.game_events.get_mut().back().map(|e| e.clone());
-            
+            let event = self
+                .server_connection
+                .game_events
+                .get_mut()
+                .back()
+                .map(|e| e.clone());
+
             match event {
                 Some(NetworkEvent::PlayerConnected { player_id }) => {
                     self.add_game_object(NetworkCar::new(player_id, self.gl, self));
                     self.server_connection.game_events.get_mut().pop_back();
                 }
-                Some(NetworkEvent::PlayerDisconnected { .. }) | None => break
+                Some(NetworkEvent::PlayerDisconnected { .. }) | None => break,
             }
         }
 
@@ -196,22 +279,32 @@ impl<'a> Game<'a> {
             self.gl.enable(BLEND);
             self.gl.blend_func(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
             self.gl.clear_color(0.03, 0.04, 0.13, 1.0);
-            self.gl.clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
-            self.gl.viewport(0, 0, self.window.size().0 as i32, self.window.size().1 as i32);
+            self.gl
+                .clear(glow::COLOR_BUFFER_BIT | glow::DEPTH_BUFFER_BIT);
+            self.gl.viewport(
+                0,
+                0,
+                self.window.size().0 as i32,
+                self.window.size().1 as i32,
+            );
         }
 
         let view_matrix = self.view_matrix.get_mut();
 
-        self.shader.set_view_matrix(view_matrix.get_matrix().as_slice());
-        self.shader.set_projection_matrix(self.projection_matrix.get_mut().get_matrix().as_slice());
+        self.shader
+            .set_view_matrix(view_matrix.get_matrix().as_slice());
+        self.shader
+            .set_projection_matrix(self.projection_matrix.get_mut().get_matrix().as_slice());
 
         self.model_matrix.get_mut().load_identity();
 
         self.shader.set_light_position(&[43.0, 80.0, -120.0, 1.0]);
         self.shader.set_light_diffuse(&[0.85, 0.59, 0.15, 1.0]);
-        self.shader.set_light_ambient(&[0.85 / 2.0, 0.59 / 2.0, 0.15 / 2.0, 1.0]);
+        self.shader
+            .set_light_ambient(&[0.85 / 2.0, 0.59 / 2.0, 0.15 / 2.0, 1.0]);
         self.shader.set_light_specular(&[0.85, 0.59, 0.15, 1.0]);
-        self.shader.set_eye_position(view_matrix.eye.x, view_matrix.eye.y, view_matrix.eye.z);
+        self.shader
+            .set_eye_position(view_matrix.eye.x, view_matrix.eye.y, view_matrix.eye.z);
 
         for object in &self.game_objects {
             object.borrow().display(self, self.gl);
@@ -228,8 +321,12 @@ impl<'a> Game<'a> {
 
                 for event in events {
                     match event {
-                        Event::Quit { .. } | Event::KeyDown { keycode: Some(Keycode::Escape), .. } => running = false,
-                        _ => ()
+                        Event::Quit { .. }
+                        | Event::KeyDown {
+                            keycode: Some(Keycode::Escape),
+                            ..
+                        } => running = false,
+                        _ => (),
                     }
 
                     for object in &self.game_objects {

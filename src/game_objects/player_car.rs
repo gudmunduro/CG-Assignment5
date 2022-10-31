@@ -20,6 +20,26 @@ impl<'a> PlayerCar<'a> {
 
         PlayerCar { car }
     }
+
+    fn i16_range_to_float(&self, value: i16) -> f32 {
+        (value as f32 - i16::MIN as f32) / (i16::MAX as f32 + -(i16::MIN as f32))
+    }
+
+    fn handle_joystick_controls(&mut self, game: &Game) {
+        let joystick = match &game.joystick {
+            Some(j) if j.attached() => j,
+            _ => return,
+        };
+
+        let rt_value = joystick.axis(5).unwrap_or(i16::MIN);
+        self.car.set_throttle(self.i16_range_to_float(rt_value) * 100.0);
+        let lt_value = joystick.axis(4).unwrap_or(i16::MIN);
+        self.car.set_brake(self.i16_range_to_float(lt_value) * 100.0);
+
+        let left_x_axis = joystick.axis(0).unwrap_or(0);
+        // let left_y_axis = joystick.axis(1).unwrap_or(0);
+        self.car.set_steering_angle(-(self.i16_range_to_float(left_x_axis) * 2.0 * (0.25 * f32::consts::PI / 4.0) - (0.25 * f32::consts::PI / 4.0)));
+    }
 }
 
 impl<'a> GameObject<'a> for PlayerCar<'a> {
@@ -76,7 +96,6 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
                     L => {
                         self.car.set_y_velocity(20.0);
                         let pos = self.car.position();
-                        println!("Position: {}, {}, {}", pos.x, pos.y, pos.z);
                     }
                     _ => (),
                 }
@@ -86,6 +105,8 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
     }
 
     fn update(&mut self, game: &Game, gl: &'a Context) {
+        self.handle_joystick_controls(game);
+
         self.car.update(game, gl);
 
         // Send status update

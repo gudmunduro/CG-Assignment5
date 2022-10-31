@@ -13,7 +13,7 @@ use crate::objects::cube::Cube;
 use glow::*;
 
 fn main() {
-    let (gl, window, mut events_loop, gl_context) = unsafe {
+    let (gl, window, mut events_loop, gl_context, joystick) = unsafe {
         let sdl = sdl2::init().unwrap();
         let video = sdl.video().unwrap();
         let gl_attr = video.gl_attr();
@@ -29,7 +29,9 @@ fn main() {
         let gl = glow::Context::from_loader_function(|s| video.gl_get_proc_address(s) as *const _);
         let events_loop = sdl.event_pump().unwrap();
 
-        (gl, window, events_loop, gl_context)
+        let joystick = sdl.joystick().unwrap();
+
+        (gl, window, events_loop, gl_context, joystick)
     };
 
     let mut game = game::Game::new(
@@ -37,6 +39,7 @@ fn main() {
         &window,
         &mut events_loop,
         &gl_context,
+        &joystick,
     );
     game.create_scene();
 
