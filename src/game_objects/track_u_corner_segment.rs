@@ -8,7 +8,7 @@ use crate::{
 
 use super::{
     track_segment::{TRACK_BOX_HEIGHT, TRACK_ELEVATION, TRACK_WIDTH},
-    track_side::{self, Side, TrackSide},
+    track_side::{self, TrackSide},
 };
 
 pub struct TrackUCornerSegment<'a> {
@@ -54,9 +54,9 @@ impl<'a> GameObject<'a> for TrackUCornerSegment<'a> {
         self.sides.collision_info()
     }
 
-    fn on_event(&mut self, game: &Game, event: &sdl2::event::Event) {}
+    fn on_event(&mut self, _game: &Game, _event: &sdl2::event::Event) {}
 
-    fn update(&mut self, game: &Game, gl: &'a glow::Context) {}
+    fn update(&mut self, _game: &Game, _gl: &'a glow::Context) {}
 
     fn display(&self, game: &Game, gl: &'a Context) {
         self.sides.display(game, gl);

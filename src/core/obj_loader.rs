@@ -1,4 +1,3 @@
-use std::borrow::Borrow;
 use std::io::BufRead;
 use std::{fs, io};
 
@@ -11,34 +10,10 @@ use nalgebra::{Vector2, Vector3};
 
 use super::game::Game;
 
-fn calculate_normals(positions: &Vec<Vector3<f32>>) -> Vec<Vector3<f32>> {
-    let mut last = positions.last().unwrap();
-    let mut next = &positions[1];
-
-    let mut normals = Vec::new();
-    for i in 0..positions.len() {
-        let current = &positions[i];
-        let v1 = last - current;
-        let v2 = next - current;
-        let v3 = v1.cross(&v2);
-
-        normals.push(v3.normalize());
-        last = current;
-        next = if i + 2 >= positions.len() {
-            &positions[0]
-        } else {
-            &positions[i + 2]
-        };
-    }
-
-    normals
-}
-
 pub fn load_mtl_file(
     file_location: &str,
     file_name: &str,
     mesh_model: &mut MeshModel,
-    gl: &Context,
     game: &Game,
 ) -> anyhow::Result<()> {
     println!("Start loading MTL: {file_name}");
@@ -50,7 +25,7 @@ pub fn load_mtl_file(
     for line in lines {
         let line = match line {
             Ok(l) => l,
-            Err(e) => continue,
+            Err(_) => continue,
         };
         let tokens: Vec<&str> = line.split(" ").collect();
         if tokens.len() == 0 {
@@ -134,7 +109,7 @@ pub fn load_obj_file<'a>(
 
         match tokens[0] {
             "mtllib" => {
-                load_mtl_file(file_location, tokens[1], &mut mesh_model, gl, game)?;
+                load_mtl_file(file_location, tokens[1], &mut mesh_model, game)?;
             }
             "o" => {
                 println!("Mesh: {}", tokens[1]);

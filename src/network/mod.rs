@@ -1,3 +1,3 @@
 pub mod server_connection;
-pub mod models;
+pub mod packets;
 pub mod parser;

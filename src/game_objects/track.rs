@@ -106,9 +106,9 @@ impl<'a> GameObject<'a> for Track<'a> {
         )
     }
 
-    fn on_event(&mut self, game: &Game, event: &sdl2::event::Event) {}
+    fn on_event(&mut self, _game: &Game, _event: &sdl2::event::Event) {}
 
-    fn update(&mut self, game: &Game, gl: &'a Context) {}
+    fn update(&mut self, _game: &Game, _gl: &'a Context) {}
 
     fn display(&self, game: &Game, gl: &'a Context) {
         for segment in &self.track {

@@ -1,8 +1,8 @@
-use std::{collections::{VecDeque, HashMap, HashSet}, net::UdpSocket, hash::Hash, cell::RefCell};
+use std::{collections::{VecDeque, HashMap, HashSet}, net::UdpSocket, cell::RefCell};
 
 use nalgebra::Vector3;
 
-use super::{models, parser::parse_packet};
+use super::{packets, parser::parse_packet};
 
 enum Connection {
     Connected(UdpSocket),
@@ -19,7 +19,7 @@ pub enum NetworkEvent {
 pub struct ServerConnection {
     connection: Connection,
     connected_players: HashSet<u8>,
-    last_status: HashMap<u8, models::StatusUpdate>,
+    last_status: HashMap<u8, packets::StatusUpdate>,
     player_id: Option<u8>,
     pub game_events: RefCell<VecDeque<NetworkEvent>>,
 }
@@ -35,18 +35,18 @@ impl ServerConnection {
         }
     }
 
-    pub fn connect(&mut self) {
+    pub fn connect(&mut self, server_address: &str) {
         let socket = UdpSocket::bind("127.0.0.1:0").expect("Failed to open socket for multiplayer");
         socket
             .set_nonblocking(true)
             .expect("Failed to set socket to non-blocking");
 
         socket
-            .connect("127.0.0.1:5899")
+            .connect(server_address)
             .expect("Failed to connect to server");
 
         socket
-            .send(&models::GamePacket::Register.binary_data())
+            .send(&packets::GamePacket::Register.to_binary_data())
             .expect("Failed to send packet to register");
 
         self.connection = Connection::Connected(socket);
@@ -63,25 +63,25 @@ impl ServerConnection {
             None => return
         };
 
-        let status = models::StatusUpdate::new(player_id, models::Vector3::from_nvector3(position), rotation, steering_angle);
-        self.send_packet(models::GamePacket::StatusUpdate(status));
+        let status = packets::StatusUpdate::new(player_id, packets::Vector3::from_nvector3(position), rotation, steering_angle);
+        self.send_packet(packets::GamePacket::StatusUpdate(status));
     }
 
     pub fn end_connection(&mut self) {
         if let Some(player_id) = self.player_id {
-            self.send_packet(models::GamePacket::End { player_id });
+            self.send_packet(packets::GamePacket::End { player_id });
         }
 
         self.connection = Connection::NotConnected;
     }
 
-    fn send_packet(&self, packet: models::GamePacket) {
+    fn send_packet(&self, packet: packets::GamePacket) {
         let socket = match &self.connection {
             Connection::Connected(s) => s,
             Connection::NotConnected => return,
         };
 
-        match socket.send(&packet.binary_data()) {
+        match socket.send(&packet.to_binary_data()) {
             Ok(_) => (),
             Err(e) => {
                 println!("Failed to send packet to server. {e}");
@@ -89,7 +89,7 @@ impl ServerConnection {
         }
     }
 
-    pub fn last_status(&self, player_id: u8) -> Option<&models::StatusUpdate> {
+    pub fn last_status(&self, player_id: u8) -> Option<&packets::StatusUpdate> {
         self.last_status.get(&player_id)
     }
 
@@ -118,7 +118,7 @@ impl ServerConnection {
                 }
             };
 
-            use models::GamePacket::*;
+            use packets::GamePacket::*;
             match packet {
                 // We should never receive a register packet
                 Register { .. } => (),

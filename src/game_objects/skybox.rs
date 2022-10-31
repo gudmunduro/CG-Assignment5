@@ -26,11 +26,11 @@ impl<'a> Skybox<'a> {
 }
 
 impl<'a> GameObject<'a> for Skybox<'a> {
-    fn on_event(&mut self, game: &Game, event: &sdl2::event::Event) {
+    fn on_event(&mut self, _game: &Game, _event: &sdl2::event::Event) {
         
     }
 
-    fn update(&mut self, game: &Game, gl: &'a Context) {
+    fn update(&mut self, _game: &Game, _gl: &'a Context) {
         
     }
 
@@ -41,7 +41,6 @@ impl<'a> GameObject<'a> for Skybox<'a> {
 
         let mut model_matrix = game.model_matrix.borrow_mut();
         model_matrix.push_stack();
-        model_matrix.add_translate(0.0, 0.0, 0.0);
         model_matrix.add_scale(400.0, 400.0, 400.0);
         
         game.shader.set_view_matrix(game.view_matrix.borrow().get_matrix_no_tranlate().as_slice());

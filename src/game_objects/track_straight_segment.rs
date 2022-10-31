@@ -5,11 +5,11 @@ use crate::{
     core::{
         color::Color,
         game::Game,
-        game_object::{Collider, GameObject},
+        game_object::GameObject,
     },
     game_objects::{
         track_segment::{TRACK_BOX_HEIGHT, TRACK_ELEVATION, TRACK_WIDTH},
-        track_side::{self, Side},
+        track_side,
     },
     objects::textured_square::TexturedSquare,
     utils::FacingDirection,
@@ -67,9 +67,9 @@ impl<'a> GameObject<'a> for TrackStraightSegment<'a> {
         self.sides.collision_info()
     }
 
-    fn on_event(&mut self, game: &Game, event: &sdl2::event::Event) {}
+    fn on_event(&mut self, _game: &Game, _event: &sdl2::event::Event) {}
 
-    fn update(&mut self, game: &Game, gl: &'a Context) {}
+    fn update(&mut self, _game: &Game, _gl: &'a Context) {}
 
     fn display(&self, game: &Game, gl: &'a Context) {
         self.sides.display(game, gl);

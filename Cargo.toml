@@ -12,3 +12,4 @@ nalgebra = "0.31.2"
 anyhow = "1.0.65"
 itertools = "0.10.5"
 nom = "7.1.1"
+clap = { version = "4.0.18", features = ["derive"] }

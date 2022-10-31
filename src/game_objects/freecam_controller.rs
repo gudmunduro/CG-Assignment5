@@ -2,14 +2,7 @@ use glow::*;
 use nalgebra::Vector3;
 use sdl2::{event::Event, keyboard::Keycode};
 
-use crate::{
-    core::{
-        game::Game,
-        game_object::GameObject,
-        obj_loader::{load_mtl_file, load_obj_file},
-    },
-    objects::mesh_model::MeshModel,
-};
+use crate::core::{game::Game, game_object::GameObject};
 
 enum ArrowDir {
     Up,
@@ -26,7 +19,7 @@ pub struct FreecamController {
 }
 
 impl<'a> FreecamController {
-    pub fn new(gl: &Context) -> FreecamController {
+    pub fn new(_gl: &Context) -> FreecamController {
         FreecamController {
             moving_foward: false,
             moving_backward: false,
@@ -36,49 +29,81 @@ impl<'a> FreecamController {
 }
 
 impl<'a> GameObject<'a> for FreecamController {
-    fn on_event(&mut self, game: &Game, event: &Event) {
+    fn on_event(&mut self, _game: &Game, event: &Event) {
         match event {
-            Event::KeyDown { keycode: Some(Keycode::W), .. } => {
+            Event::KeyDown {
+                keycode: Some(Keycode::W),
+                ..
+            } => {
                 self.moving_foward = true;
-            },
-            Event::KeyUp { keycode: Some(Keycode::W), .. } => {
+            }
+            Event::KeyUp {
+                keycode: Some(Keycode::W),
+                ..
+            } => {
                 self.moving_foward = false;
-            },
-            Event::KeyDown { keycode: Some(Keycode::S), .. } => {
+            }
+            Event::KeyDown {
+                keycode: Some(Keycode::S),
+                ..
+            } => {
                 self.moving_backward = true;
-            },
-            Event::KeyUp { keycode: Some(Keycode::S), .. } => {
+            }
+            Event::KeyUp {
+                keycode: Some(Keycode::S),
+                ..
+            } => {
                 self.moving_backward = false;
-            },
-            Event::KeyDown { keycode: Some(code @ (Keycode::Up | Keycode::Down | Keycode::Left | Keycode::Right)), .. } => {
+            }
+            Event::KeyDown {
+                keycode: Some(code @ (Keycode::Up | Keycode::Down | Keycode::Left | Keycode::Right)),
+                ..
+            } => {
                 use ArrowDir::*;
                 self.arrow_direction = match code {
                     Keycode::Up => Up,
                     Keycode::Down => Down,
                     Keycode::Left => Left,
                     Keycode::Right => Right,
-                    _ => None
+                    _ => None,
                 };
-            },
-            Event::KeyUp { keycode: Some(Keycode::Up | Keycode::Down | Keycode::Left | Keycode::Right), .. } => {
+            }
+            Event::KeyUp {
+                keycode: Some(Keycode::Up | Keycode::Down | Keycode::Left | Keycode::Right),
+                ..
+            } => {
                 self.arrow_direction = ArrowDir::None;
-            },
+            }
             _ => (),
         }
     }
 
-    fn update(&mut self, game: &Game, gl: &'a Context) {
+    fn update(&mut self, game: &Game, _gl: &'a Context) {
         let mut view_matrix = game.view_matrix.borrow_mut();
 
         if self.moving_foward {
             let n = view_matrix.n;
-            view_matrix.slide(0.0, 0.0, -game.delta_time * 10.0, Vector3::zeros(), Vector3::zeros(), n);
+            view_matrix.slide(
+                0.0,
+                0.0,
+                -game.delta_time * 10.0,
+                Vector3::zeros(),
+                Vector3::zeros(),
+                n,
+            );
         }
 
         if self.moving_backward {
             let n = view_matrix.n;
-            view_matrix.slide(0.0, 0.0, game.delta_time  * 10.0, Vector3::zeros(), Vector3::zeros(), n);
-        }        
+            view_matrix.slide(
+                0.0,
+                0.0,
+                game.delta_time * 10.0,
+                Vector3::zeros(),
+                Vector3::zeros(),
+                n,
+            );
+        }
 
         let rot_speed = 150.0;
         use ArrowDir::*;
@@ -87,9 +112,9 @@ impl<'a> GameObject<'a> for FreecamController {
             Down => view_matrix.pitch(-rot_speed * game.delta_time),
             Left => view_matrix.yaw(rot_speed * game.delta_time),
             Right => view_matrix.yaw(-rot_speed * game.delta_time),
-            None => ()
+            None => (),
         }
     }
 
-    fn display(&self, game: &Game, gl: &'a Context) {}
+    fn display(&self, _game: &Game, _gl: &'a Context) {}
 }

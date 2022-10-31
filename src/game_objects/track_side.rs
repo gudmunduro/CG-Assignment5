@@ -80,11 +80,11 @@ impl<'a> GameObject<'a> for TrackSide {
         Collider::MultiCollider(self.colliders.clone())
     }
 
-    fn on_event(&mut self, game: &Game, event: &Event) {}
+    fn on_event(&mut self, _game: &Game, _event: &Event) {}
 
-    fn update(&mut self, game: &Game, gl: &'a Context) {}
+    fn update(&mut self, _game: &Game, _gl: &'a Context) {}
 
-    fn display(&self, game: &Game, gl: &'a Context) {
+    fn display(&self, game: &Game, _gl: &'a Context) {
         let mut model_matrix = game.model_matrix.borrow_mut();
 
         use TrackSegmentSideType::*;

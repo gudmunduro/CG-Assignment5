@@ -2,7 +2,7 @@ use std::slice;
 
 use glow::*;
 use itertools::{izip, Itertools};
-use nalgebra::{Vector2, Vector3};
+use nalgebra::Vector3;
 
 use crate::core::shader::Shader3D;
 

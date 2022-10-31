@@ -1,19 +1,29 @@
 pub mod core;
-pub mod objects;
 pub mod game_objects;
-pub mod utils;
 pub mod network;
+pub mod objects;
+pub mod utils;
+
+use clap::Parser;
 
 use crate::core::constants::{W_HEIGHT, W_WIDTH};
 
 use crate::core::game;
-use crate::core::matrices;
-use crate::core::shader::Shader3D;
-use crate::objects::cube::Cube;
-use glow::*;
+
+/// Assignment 5 game
+#[derive(Parser, Debug)]
+#[command(about, long_about = None)]
+struct Args {
+    /// Server ip and port in the form IP:PORT.
+    /// Skip this argument to play in single player
+    #[clap(short, long, default_value = None)]
+    server: Option<String>,
+}
 
 fn main() {
-    let (gl, window, mut events_loop, gl_context, joystick) = unsafe {
+    let args = Args::parse();
+
+    let (gl, window, mut events_loop, _gl_context, joystick) = unsafe {
         let sdl = sdl2::init().unwrap();
         let video = sdl.video().unwrap();
         let gl_attr = video.gl_attr();
@@ -38,8 +48,8 @@ fn main() {
         &gl,
         &window,
         &mut events_loop,
-        &gl_context,
         &joystick,
+        args.server.as_ref().map(String::as_str),
     );
     game.create_scene();
 

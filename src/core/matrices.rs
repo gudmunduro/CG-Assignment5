@@ -1,4 +1,4 @@
-use nalgebra::{matrix, ArrayStorage, Const, Matrix, Point3, Vector3};
+use nalgebra::{matrix, ArrayStorage, Const, Matrix, Vector3};
 
 pub struct ModelMatrix {
     pub matrix: Matrix<f32, Const<4>, Const<4>, ArrayStorage<f32, 4, 4>>,

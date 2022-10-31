@@ -55,7 +55,7 @@ impl<'a> PlayerCar<'a> {
 }
 
 impl<'a> GameObject<'a> for PlayerCar<'a> {
-    fn on_event(&mut self, game: &Game, event: &Event) {
+    fn on_event(&mut self, _game: &Game, event: &Event) {
         match event {
             Event::KeyDown {
                 keycode: Some(key ),

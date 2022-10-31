@@ -13,12 +13,16 @@ const MAX_GRIP: f32 = 2.0;
 const CAR_B: f32 = 1.0;
 const CAR_C: f32 = 1.0;
 const CAR_WHEELBASE: f32 = CAR_B * CAR_C;
+#[allow(dead_code)]
 const CAR_H: f32 = 1.0;
 const CAR_MASS: f32 = 600.0;
 const CAR_INERTIA: f32 = 600.0;
+#[allow(dead_code)]
 const CAR_WIDTH: f32 = 1.5;
+#[allow(dead_code)]
 const CAR_LENGTH: f32 = 3.0;
 const CAR_WHEEL_LENGTH: f32 = 1.4;
+#[allow(dead_code)]
 const CAR_WHEEL_WIDTH: f32 = 0.3;
 
 const GRAVITY: f32 = 9.8;

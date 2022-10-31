@@ -14,7 +14,7 @@ impl Vector3 {
         Vector3 { x: vector.x, y: vector.y, z: vector.z }
     }
 
-    pub fn binary_data(&self) -> Vec<u8> {
+    pub fn to_binary_data(&self) -> Vec<u8> {
         [self.x.to_le_bytes(), self.y.to_le_bytes(), self.z.to_le_bytes()].concat()
     }
 }
@@ -38,8 +38,8 @@ impl StatusUpdate {
         StatusUpdate { player_id, position, rotation, steering_angle }
     }
 
-    pub fn binary_data(&self) -> Vec<u8> {
-        [vec![1u8, self.player_id], self.position.binary_data(), self.rotation.to_le_bytes().to_vec(), self.steering_angle.to_le_bytes().to_vec()].concat()
+    pub fn to_binary_data(&self) -> Vec<u8> {
+        [vec![1u8, self.player_id], self.position.to_binary_data(), self.rotation.to_le_bytes().to_vec(), self.steering_angle.to_le_bytes().to_vec()].concat()
     }
 }
 
@@ -54,13 +54,13 @@ pub enum GamePacket {
 }
 
 impl GamePacket {
-    pub fn binary_data(&self) -> Vec<u8> {
+    pub fn to_binary_data(&self) -> Vec<u8> {
         use GamePacket::*;
         match self {
             Register => vec![0],
             Inform { player_id } => vec![5, *player_id],
             NewPlayer { player_id } => vec![6, *player_id],
-            StatusUpdate(s) => s.binary_data(),
+            StatusUpdate(s) => s.to_binary_data(),
             DropPlayer { player_id } => vec![4, *player_id],
             End { player_id } => vec![3, *player_id]
         }

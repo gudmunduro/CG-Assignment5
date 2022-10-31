@@ -1,4 +1,4 @@
-use std::{cell::RefCell, collections::VecDeque, path::Path, slice, time::Instant, rc::Rc};
+use std::{cell::RefCell, collections::VecDeque, path::Path, time::Instant, rc::Rc};
 
 use crate::{
     core::{
@@ -6,8 +6,8 @@ use crate::{
         shader::Shader3D,
     },
     game_objects::{
-        car::Car, freecam_controller::FreecamController, ground::Ground, network_car::NetworkCar,
-        player_car::PlayerCar, skybox::Skybox, track::Track, track_segment::TrackSegment,
+        network_car::NetworkCar,
+        player_car::PlayerCar, skybox::Skybox, track::Track,
     },
     network::server_connection::{NetworkEvent, ServerConnection},
     objects::{cube::Cube, mesh_model::MeshModel},
@@ -19,7 +19,7 @@ use sdl2::{
     joystick::Joystick,
     keyboard::Keycode,
     pixels::PixelFormatEnum,
-    video::{GLContext, Window},
+    video::Window,
     EventPump, JoystickSubsystem,
 };
 
@@ -36,7 +36,6 @@ pub struct Game<'a> {
     gl: &'a Context,
     window: &'a Window,
     events_loop: &'a mut EventPump,
-    gl_context: &'a GLContext,
     joystick_subsystem: &'a JoystickSubsystem,
     pub joystick: Option<Joystick>,
     pub shader: Shader3D<'a>,
@@ -60,8 +59,8 @@ impl<'a> Game<'a> {
         gl: &'a Context,
         window: &'a Window,
         events_loop: &'a mut EventPump,
-        gl_context: &'a GLContext,
         joystick_subsystem: &'a JoystickSubsystem,
+        server_address: Option<&str>,
     ) -> Game<'a> {
         let shader = Shader3D::new(&gl);
         let cube = Cube::new(&gl);
@@ -75,11 +74,17 @@ impl<'a> Game<'a> {
         projection_matrix.set_perspective(60.0, W_WIDTH as f32 / W_HEIGHT as f32, 0.5, 500.0);
         shader.set_projection_matrix(projection_matrix.get_matrix().as_slice());
 
+        let mut server_connection = ServerConnection::new();
+        
+        match server_address {
+            Some(a) => server_connection.connect(a),
+            None => ()
+        }
+
         Game {
             gl,
             window,
             events_loop,
-            gl_context,
             joystick_subsystem,
             joystick: None,
             shader,
@@ -91,7 +96,7 @@ impl<'a> Game<'a> {
             delta_time: 0.0,
             game_objects: Vec::new(),
             objects_to_delete: RefCell::new(VecDeque::new()),
-            server_connection: ServerConnection::new(),
+            server_connection,
             frame_sum: 0,
             frame_time_sum: 0.0,
             // Temporary initialize the car model as empty as game needs to exit before we load it
@@ -101,9 +106,6 @@ impl<'a> Game<'a> {
     }
 
     pub fn create_scene(&mut self) {
-        // Initilize network
-        self.server_connection.connect();
-
         // Load the models
         self.car_model =
             Rc::new(load_obj_file("./models", "car.obj", self.gl, self).expect("Failed to load car model"));
@@ -113,7 +115,6 @@ impl<'a> Game<'a> {
         // Create the level
         self.add_game_object(Skybox::new(self.gl, self));
         self.add_game_object(Track::new(self.gl, self));
-        // self.add_game_object(Ground::new(self.gl, self));
         self.add_game_object(PlayerCar::new(self.car_model.clone(), self.wheel_model.clone(), self.gl, self));
         // self.add_game_object(FreecamController::new(self.gl));
     }

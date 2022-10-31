@@ -2,13 +2,17 @@ use glow::{Context, NativeTexture};
 use nalgebra::Vector3;
 
 use crate::{
-    core::{color::Color, game::Game, game_object::{GameObject, Collider}},
+    core::{
+        color::Color,
+        game::Game,
+        game_object::{Collider, GameObject},
+    },
     objects::track_corner::{TrackCorner, TrackCornerType},
 };
 
 use super::{
     track_segment::{TRACK_BOX_HEIGHT, TRACK_ELEVATION, TRACK_WIDTH},
-    track_side::{self, Side, TrackSide},
+    track_side::{TrackSide, self},
 };
 
 pub struct TrackRightCornerSegment<'a> {
@@ -28,14 +32,13 @@ impl<'a> TrackRightCornerSegment<'a> {
         let segemnt_object = TrackCorner::new(gl, TrackCornerType::Right);
 
         let pos = position + Vector3::new(0.0, TRACK_ELEVATION + 0.5, 0.0);
-        let sides = 
-            TrackSide::new(
-                pos,
-                0.0,
-                20.0,
-                track_side::TrackSegmentSideType::RightCorner,
-                game,
-            );
+        let sides = TrackSide::new(
+            pos,
+            0.0,
+            20.0,
+            track_side::TrackSegmentSideType::RightCorner,
+            game,
+        );
 
         TrackRightCornerSegment {
             road_texture,
@@ -51,9 +54,9 @@ impl<'a> GameObject<'a> for TrackRightCornerSegment<'a> {
         self.sides.collision_info()
     }
 
-    fn on_event(&mut self, game: &Game, event: &sdl2::event::Event) {}
+    fn on_event(&mut self, _game: &Game, _event: &sdl2::event::Event) {}
 
-    fn update(&mut self, game: &Game, gl: &'a Context) {}
+    fn update(&mut self, _game: &Game, _gl: &'a Context) {}
 
     fn display(&self, game: &Game, gl: &'a Context) {
         self.sides.display(game, gl);
@@ -61,8 +64,10 @@ impl<'a> GameObject<'a> for TrackRightCornerSegment<'a> {
         let mut model_matrix = game.model_matrix.borrow_mut();
 
         // Pavement
-        game.shader.set_material_ambient(&Color::new(0.84 / 1.5, 0.73 / 1.5, 0.67 / 1.5));
-        game.shader.set_material_diffuse(&Color::new(0.84, 0.73, 0.67));
+        game.shader
+            .set_material_ambient(&Color::new(0.84 / 1.5, 0.73 / 1.5, 0.67 / 1.5));
+        game.shader
+            .set_material_diffuse(&Color::new(0.84, 0.73, 0.67));
         game.shader
             .set_material_specular(&Color::new(0.2, 0.2, 0.2));
         game.shader.set_shininess(100.0);

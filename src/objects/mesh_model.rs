@@ -1,11 +1,9 @@
-use std::{collections::HashMap, slice, hash::Hash};
+use std::{collections::HashMap, slice};
 
 use glow::*;
 use nalgebra::{Vector3, Vector2};
 
 use crate::core::{material::Material, shader::Shader3D};
-
-const AMBIENT_FACTOR: f32 = 0.5;
 
 pub struct MeshModel<'a> {
     vertex_arrays: HashMap<String, Vec<f32>>,

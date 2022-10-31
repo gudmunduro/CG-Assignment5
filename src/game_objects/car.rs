@@ -2,16 +2,15 @@ use std::{f32, rc::Rc};
 
 use glow::*;
 use nalgebra::{Vector3, Vector4, Vector2};
-use sdl2::{event::Event, keyboard::Keycode};
+use sdl2::event::Event;
 
 use crate::{
     core::{
         game::Game,
         game_object::{Collider, GameObject},
-        obj_loader::load_obj_file, color::Color,
     },
     objects::mesh_model::MeshModel,
-    utils::{car_sim::{self, CarState}, line_contains_point},
+    utils::{car_sim::CarState, line_contains_point},
 };
 
 pub enum ViewState {
@@ -23,7 +22,6 @@ pub struct Car<'a> {
     car_model: Rc<MeshModel<'a>>,
     wheel_model: Rc<MeshModel<'a>>,
     car_state: CarState,
-    throttle_state: bool,
     y_velocity: f32,
     handbrake: bool,
     wheel_rotation: f32,
@@ -32,14 +30,13 @@ pub struct Car<'a> {
 }
 
 impl<'a> Car<'a> {
-    pub fn new(enable_collision_check: bool, car_model: Rc<MeshModel<'a>>, wheel_model: Rc<MeshModel<'a>>, gl: &'a Context, game: &Game) -> Car<'a> {
+    pub fn new(enable_collision_check: bool, car_model: Rc<MeshModel<'a>>, wheel_model: Rc<MeshModel<'a>>, _gl: &'a Context, _game: &Game) -> Car<'a> {
         let mut car_state = CarState::new();
         car_state.position_wc.y = 40.0;
 
         Car {
             car_model,
             wheel_model,
-            throttle_state: false,
             car_state,
             y_velocity: 0.0,
             handbrake: false,
@@ -288,9 +285,9 @@ impl<'a> Car<'a> {
 }
 
 impl<'a> GameObject<'a> for Car<'a> {
-    fn on_event(&mut self, game: &Game, event: &Event) {}
+    fn on_event(&mut self, _game: &Game, _event: &Event) {}
 
-    fn update(&mut self, game: &Game, gl: &'a Context) {
+    fn update(&mut self, game: &Game, _gl: &'a Context) {
         if self.enable_collision_check {
             self.check_all_collision(game);
         }
@@ -306,7 +303,7 @@ impl<'a> GameObject<'a> for Car<'a> {
         self.update_gravity(game);
     }
 
-    fn display(&self, game: &Game, gl: &'a Context) {
+    fn display(&self, game: &Game, _gl: &'a Context) {
         let mut model_matrix = game.model_matrix.borrow_mut();
 
         // Car
@@ -347,14 +344,14 @@ impl<'a> GameObject<'a> for Car<'a> {
 
         // Rear wheels
         model_matrix.push_stack();
-        model_matrix.add_translate(0.4, -0.1, -0.6);
+        model_matrix.add_translate(0.4, -0.05, -0.6);
         model_matrix.add_rotation(self.wheel_rotation, 90.0f32.to_radians(), 0.0);
         game.shader.set_model_matrix(model_matrix.matrix.as_slice());
         self.wheel_model.draw(&game.shader);
         model_matrix.pop_stack();
 
         model_matrix.push_stack();
-        model_matrix.add_translate(-0.4, -0.1, -0.6);
+        model_matrix.add_translate(-0.4, -0.05, -0.6);
         model_matrix.add_rotation(self.wheel_rotation, -90.0f32.to_radians(), 0.0);
         game.shader.set_model_matrix(model_matrix.matrix.as_slice());
         self.wheel_model.draw(&game.shader);

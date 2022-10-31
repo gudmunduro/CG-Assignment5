@@ -7,7 +7,7 @@ use nom::{
     IResult,
 };
 
-use super::models::{GamePacket, StatusUpdate, Vector3};
+use super::packets::{GamePacket, StatusUpdate, Vector3};
 
 pub fn parse_float(input: &[u8]) -> IResult<&[u8], f32> {
     map_parser(take(4u8), le_f32)(input)
