@@ -16,7 +16,7 @@ pub fn load_mtl_file(
     mesh_model: &mut MeshModel,
     game: &Game,
 ) -> anyhow::Result<()> {
-    log::trace!("Loading material file: {file_name}");
+    log::debug!("Loading material file: {file_name}");
     let mut mtl = None;
     let mut mtl_name: Option<String> = None;
     let fin = fs::File::open(format!("{file_location}/{file_name}"))?;
@@ -38,7 +38,7 @@ pub fn load_mtl_file(
                     mesh_model.add_material(&mtl_name.unwrap(), &mtl);
                 }
 
-                log::trace!("Material {}", tokens[1]);
+                log::debug!("Material {}", tokens[1]);
                 mtl = Some(Material::new(None, None, None, None, None, None, None));
                 mtl_name = Some(tokens[1].to_string());
             }
@@ -73,7 +73,7 @@ pub fn load_mtl_file(
             _ => (),
         }
     }
-    log::trace!("Finished loadaing MTL {file_name}");
+    log::debug!("Finished loadaing MTL {file_name}");
 
     mesh_model.add_material(&mtl_name.unwrap(), &mtl.unwrap());
 
@@ -86,7 +86,7 @@ pub fn load_obj_file<'a>(
     gl: &'a Context,
     game: &Game,
 ) -> anyhow::Result<MeshModel<'a>> {
-    log::trace!("Loading object file: {file_name}");
+    log::debug!("Loading object file: {file_name}");
 
     let mut mesh_model = MeshModel::new(gl);
     let mut current_object_id = None;
@@ -112,7 +112,7 @@ pub fn load_obj_file<'a>(
                 load_mtl_file(file_location, tokens[1], &mut mesh_model, game)?;
             }
             "o" => {
-                log::trace!("Mesh: {}", tokens[1]);
+                log::debug!("Mesh: {}", tokens[1]);
                 current_object_id = Some(tokens[1].to_string());
             }
             "v" => {
