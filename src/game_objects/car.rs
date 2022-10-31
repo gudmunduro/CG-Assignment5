@@ -155,11 +155,9 @@ impl<'a> Car<'a> {
                     if self.car_state.position_wc.y > max_y {
                         self.y_velocity = 0.0;
                         closest_y = max_y + 1.5;
-                        // println!("Collided with y");
                     } else if self.car_state.position_wc.y < min_y {
                         self.y_velocity = -1.0;
                         closest_y = min_y - 1.5;
-                        // println!("Collided with -y");
                     }
 
                     let mut closest_z = self.car_state.position_wc.z;

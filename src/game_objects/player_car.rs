@@ -108,10 +108,6 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
                     L => {
                         self.car.set_y_velocity(20.0);
                     }
-                    P => {
-                        let pos = self.car.position();
-                        println!("Position: {}, {}, {}", pos.x, pos.y, pos.z);
-                    }
                     _ => (),
                 }
             }

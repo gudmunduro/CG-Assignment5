@@ -84,7 +84,7 @@ impl ServerConnection {
         match socket.send(&packet.to_binary_data()) {
             Ok(_) => (),
             Err(e) => {
-                println!("Failed to send packet to server. {e}");
+                log::error!("Failed to send packet to server. {e}");
             }
         }
     }
@@ -113,7 +113,7 @@ impl ServerConnection {
             let packet = match parse_packet(&buffer[0..size]) {
                 Ok(p) => p,
                 Err(e) => {
-                    println!("Recieved invalid packet. {e}");
+                    log::error!("Recieved invalid packet. {e}");
                     continue;
                 }
             };
@@ -129,7 +129,7 @@ impl ServerConnection {
                 Inform { player_id } => {
                     self.player_id = Some(player_id);
                     self.game_events.get_mut().push_back(NetworkEvent::MoveToStartPos);
-                    println!("Playing as player {player_id}");
+                    log::info!("Playing as player {player_id}");
                 }
                 StatusUpdate(status) => {
                     match self.last_status.get_mut(&status.player_id) {

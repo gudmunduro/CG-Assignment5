@@ -223,7 +223,7 @@ impl<'a> Game<'a> {
 
         if SHOW_FPS {
             if self.frame_time_sum >= 1.0 {
-                println!("FPS: {}", self.frame_sum);
+                log::info!("FPS: {}", self.frame_sum);
                 self.frame_sum = 0;
                 self.frame_time_sum = 0.0;
             }

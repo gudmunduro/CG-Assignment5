@@ -5,6 +5,7 @@ pub mod objects;
 pub mod utils;
 
 use clap::Parser;
+use simplelog::TermLogger;
 
 use crate::core::constants::{W_HEIGHT, W_WIDTH};
 
@@ -22,6 +23,7 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
+    init_logger();
 
     let (gl, window, mut events_loop, _gl_context, joystick) = unsafe {
         let sdl = sdl2::init().unwrap();
@@ -54,4 +56,14 @@ fn main() {
     game.create_scene();
 
     game.main();
+}
+
+fn init_logger() {
+    TermLogger::init(
+        simplelog::LevelFilter::Trace,
+        simplelog::Config::default(),
+        simplelog::TerminalMode::Mixed,
+        simplelog::ColorChoice::Auto,
+    )
+    .expect("Failed to init logger");
 }
