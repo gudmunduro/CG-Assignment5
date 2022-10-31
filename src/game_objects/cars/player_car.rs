@@ -4,9 +4,9 @@ use glow::Context;
 use nalgebra::Vector3;
 use sdl2::{event::Event, keyboard::Keycode};
 
-use crate::{core::{game_object::GameObject, game::Game}, game_objects::car::ViewState, objects::mesh_model::MeshModel, network::server_connection::NetworkEvent};
+use crate::{core::{game_object::GameObject, game::Game}, game_objects::cars::car::ViewState, objects::mesh_model::MeshModel, network::server_connection::NetworkEvent};
 
-use super::{car::Car, track_segment::TRACK_ELEVATION};
+use super::{car::Car, super::track::track_segment::TRACK_ELEVATION};
 
 const LOOK_DIST: f32 = 0.9;
 

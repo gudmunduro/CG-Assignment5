@@ -1,7 +1,7 @@
 const int LIGHT_COUNT = 1;
-const float fog_maxdist = 250.0;
-const float fog_mindist = 0.1;
-const vec4 fog_color = vec4(0.89, 0.67, 0.36, 1.0);
+const float FOG_MAXDIST = 250.0;
+const float FOG_MINDIST = 0.1;
+const vec4 FOG_COLOR = vec4(0.89, 0.67, 0.36, 1.0);
 
 uniform vec4 u_light_diffuse[LIGHT_COUNT];
 uniform vec4 u_light_ambient[LIGHT_COUNT];
@@ -24,7 +24,7 @@ varying vec2 v_uv;
 void main(void)
 {
 	if (u_skybox_mode) {
-		gl_FragColor = mix(fog_color, texture2D(u_texture_diffuse, v_uv), 0.2);
+		gl_FragColor = mix(FOG_COLOR, texture2D(u_texture_diffuse, v_uv), 0.2);
 		return;
 	}
 
@@ -50,8 +50,8 @@ void main(void)
     
 	// Fog
 	float dist = length(v);
-	float fog_factor = (fog_maxdist - dist) / (fog_maxdist - fog_mindist);
+	float fog_factor = (FOG_MAXDIST - dist) / (FOG_MAXDIST - FOG_MINDIST);
 	fog_factor = clamp(fog_factor, 0.2, 1.0);
 
-	gl_FragColor = mix(fog_color, final_color, fog_factor);
+	gl_FragColor = mix(FOG_COLOR, final_color, fog_factor);
 }

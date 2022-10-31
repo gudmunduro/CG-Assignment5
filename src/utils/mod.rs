@@ -1,7 +1,5 @@
 use nalgebra::Vector2;
 
-pub mod car_sim;
-
 #[derive(Clone)]
 pub enum FacingDirection {
     North,

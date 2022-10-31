@@ -7,7 +7,7 @@ use crate::{
         game::Game,
         game_object::GameObject,
     },
-    game_objects::{
+    game_objects::track::{
         track_segment::{TRACK_BOX_HEIGHT, TRACK_ELEVATION, TRACK_WIDTH},
         track_side,
     },

@@ -10,8 +10,10 @@ use crate::{
         game_object::{Collider, GameObject},
     },
     objects::mesh_model::MeshModel,
-    utils::{car_sim::CarState, line_contains_point},
+    utils::line_contains_point,
 };
+
+use super::car_state::CarState;
 
 pub enum ViewState {
     ThirdPerson,

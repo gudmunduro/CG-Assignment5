@@ -6,7 +6,7 @@ use crate::{
         game::Game,
         game_object::{Collider, GameObject},
     },
-    game_objects::{
+    game_objects::track::{
         track_right_corner_segment::TrackRightCornerSegment,
         track_straight_segment::TrackStraightSegment, track_u_corner_segment::TrackUCornerSegment,
     },

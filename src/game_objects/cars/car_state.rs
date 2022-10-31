@@ -2,7 +2,7 @@ use std::f32;
 
 use nalgebra::Vector3;
 
-use super::limit;
+use crate::utils::limit;
 
 const DRAG_FORCE: f32 = 5.0;
 const ROLLING_RESISTANCE: f32 = 30.0;
