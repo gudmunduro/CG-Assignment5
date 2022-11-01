@@ -58,7 +58,7 @@ impl<'a> Track<'a> {
             game,
         )));
         track.push(UCorner(TrackUCornerSegment::new(
-            Vector3::new(292.3, 0.0, 159.0),
+            Vector3::new(292.3, 0.0001, 159.0),
             270f32.to_radians(),
             gl,
             game,

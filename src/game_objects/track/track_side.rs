@@ -136,7 +136,7 @@ impl<'a> GameObject<'a> for TrackSide {
                 );
 
                 model_matrix.push_stack();
-                model_matrix.add_translate(self.pos.x, self.pos.y, self.pos.z);
+                model_matrix.add_translate(self.pos.x, self.pos.y + 0.0002, self.pos.z);
                 model_matrix.add_rotation(0.0, 270f32.to_radians(), 0.0);
 
                 let points = 70;
@@ -228,7 +228,7 @@ impl<'a> GameObject<'a> for TrackSide {
                         .set_material_specular(&Color::new(1.0, 1.0, 1.0));
                     game.shader.set_shininess(3.0);
 
-                    model_matrix.add_translate(self.pos.x, self.pos.y, self.pos.z);
+                    model_matrix.add_translate(self.pos.x, self.pos.y + 0.0001, self.pos.z);
                     model_matrix.add_rotation(0.0, self.rot, 0.0);
 
                     // Outer
