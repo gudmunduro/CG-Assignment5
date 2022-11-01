@@ -38,11 +38,11 @@ impl<'a> PlayerCar<'a> {
 
         let mut lights = game.lights.borrow_mut();
         lights.add_light("PLAYER_CAR");
-        lights.set_light_diffuse("PLAYER_CAR", &Color::new(0.0, 1.0, 0.0));
-        //lights
-        //    .set_light_ambient("PLAYER_CAR", &Color::with_alpha(0.0, 0.0, 0.0, 0.0));
-        lights.set_light_specular("PLAYER_CAR", &Color::new(0.0, 1.0, 0.0));
-        lights.set_light_max_radius("PLAYER_CAR", 1.0);
+        lights.set_light_diffuse("PLAYER_CAR", &Color::new(0.89, 0.91, 1.00));
+        lights
+            .set_light_ambient("PLAYER_CAR", &Color::with_alpha(0.0, 0.0, 0.0, 0.0));
+        lights.set_light_specular("PLAYER_CAR", &Color::new(0.89, 0.91, 1.00));
+        lights.set_light_max_radius("PLAYER_CAR", 50.0);
 
         PlayerCar {
             car,
@@ -213,7 +213,7 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
         }
 
         // Update lights
-        let pos = self.car.position();
+        let pos = self.car.light_position();
         game.lights.borrow_mut().set_light_position("PLAYER_CAR", &Vector3::new(pos.x, pos.y, pos.z));
 
         // Update camera pos

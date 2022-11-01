@@ -293,6 +293,14 @@ impl<'a> Car<'a> {
     pub fn reset_physics(&mut self) {
         self.car_state = CarState::new();
     }
+
+    pub fn light_position(&self) -> Vector3<f32> {
+        let pos = self.position();
+        let ang_sin = self.angle().sin();
+        let ang_cos = self.angle().cos();
+
+        pos + Vector3::new(ang_sin * 10.0, 0.0, ang_cos * 10.0)
+    }
 }
 
 impl<'a> GameObject<'a> for Car<'a> {
