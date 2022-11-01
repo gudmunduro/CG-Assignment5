@@ -55,6 +55,16 @@ pub fn parse_new_player(input: &[u8]) -> IResult<&[u8], GamePacket> {
     })(input)
 }
 
+pub fn parse_lap_complete(input: &[u8]) -> IResult<&[u8], GamePacket> {
+    map(preceded(tag(&[7u8]), le_u8), |player_id| {
+        GamePacket::LapComplete { player_id }
+    })(input)
+}
+
+pub fn parse_restart(input: &[u8]) -> IResult<&[u8], GamePacket> {
+    value(GamePacket::Restart, tag(&[8u8]))(input)
+}
+
 pub fn parse_packet(packet: &[u8]) -> Result<GamePacket, Box<dyn std::error::Error + '_>> {
     let (_, packet) = alt((
         parse_status_update,
@@ -63,6 +73,8 @@ pub fn parse_packet(packet: &[u8]) -> Result<GamePacket, Box<dyn std::error::Err
         parse_drop_player,
         parse_inform,
         parse_new_player,
+        parse_lap_complete,
+        parse_restart,
     ))(packet)?;
 
     Ok(packet)

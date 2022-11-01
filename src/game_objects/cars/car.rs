@@ -176,8 +176,7 @@ impl<'a> Car<'a> {
             }
             InfiniteYPlaneCollider(p0, p1) => {
                 let corners = self.full_car_cube(game, None);
-                let mut car_state_predicted = self.car_state.clone();
-                car_state_predicted.perform_physics_time_step(game.delta_time, self.handbrake, self.handbrake);
+                let car_state_predicted = self.car_state.peek_time_step(game.delta_time, self.handbrake, self.handbrake);
                 let future_corners = self.full_car_cube(game, Some(&car_state_predicted));
 
                 for (corner, f_corner) in corners[..4].iter().zip(&future_corners[..4]) {
@@ -281,6 +280,14 @@ impl<'a> Car<'a> {
 
     pub fn set_angle(&mut self, value: f32) {
         self.car_state.angle = value;
+    }
+
+    pub fn car_state(&self) -> &CarState {
+        &self.car_state
+    }
+
+    pub fn reset_physics(&mut self) {
+        self.car_state = CarState::new();
     }
 }
 

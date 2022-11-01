@@ -49,7 +49,7 @@ impl CarState {
             steering_angle: 0.0,
             throttle: 0.0,
             brake: 0.0,
-            wheel_rotation_speed: 0.0
+            wheel_rotation_speed: 0.0,
         }
     }
 
@@ -113,7 +113,8 @@ impl CarState {
             0.0,
             0.0,
         );
-        self.wheel_rotation_speed = ((traction_force.x * delta_time) / CAR_WHEEL_LENGTH) * 2.0 * f32::consts::PI;
+        self.wheel_rotation_speed =
+            ((traction_force.x * delta_time) / CAR_WHEEL_LENGTH) * 2.0 * f32::consts::PI;
 
         if rear_slip {
             traction_force.x *= 0.5;
@@ -144,7 +145,11 @@ impl CarState {
         let angular_acceleration = torque / CAR_INERTIA;
 
         // Velocity and position
-        let acceleration_wc = Vector3::new(cos_ang * acceleration.z + sin_ang * acceleration.x, 0.0, -sin_ang * acceleration.z + cos_ang * acceleration.x);
+        let acceleration_wc = Vector3::new(
+            cos_ang * acceleration.z + sin_ang * acceleration.x,
+            0.0,
+            -sin_ang * acceleration.z + cos_ang * acceleration.x,
+        );
 
         self.velocity_wc.x += delta_time * acceleration_wc.x;
         self.velocity_wc.z += delta_time * acceleration_wc.z;
@@ -156,5 +161,10 @@ impl CarState {
         self.angular_velocity += delta_time * angular_acceleration;
         self.angle += delta_time * self.angular_velocity;
     }
-}
 
+    pub fn peek_time_step(&self, delta_time: f32, front_slip: bool, rear_slip: bool) -> CarState {
+        let mut future_state = self.clone();
+        future_state.perform_physics_time_step(delta_time, front_slip, rear_slip);
+        future_state
+    }
+}

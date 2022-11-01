@@ -67,6 +67,18 @@ impl ServerConnection {
         self.send_packet(packets::GamePacket::StatusUpdate(status));
     }
 
+    pub fn send_lap_complete(&self) {
+        let player_id = match self.player_id {
+            Some(player_id) => player_id,
+            None => {
+                log::error!("Tried to send lap complete message without having gotten a player id");
+                return
+            }
+        };
+
+        self.send_packet(packets::GamePacket::LapComplete { player_id });
+    }
+
     pub fn end_connection(&mut self) {
         if let Some(player_id) = self.player_id {
             self.send_packet(packets::GamePacket::End { player_id });
@@ -142,11 +154,15 @@ impl ServerConnection {
                         None => ()
                     };
                 }
+                Restart => {
+                    log::debug!("Some player has won, restarting");
+                    self.game_events.get_mut().push_back(NetworkEvent::MoveToStartPos);
+                }
                 DropPlayer { player_id } => {
                     self.connected_players.remove(&player_id);
                     self.game_events.get_mut().push_back(NetworkEvent::PlayerDisconnected { player_id });
                 }
-                End { .. } => (),
+                End { .. } | LapComplete { .. } => (),
             }
         }
     }

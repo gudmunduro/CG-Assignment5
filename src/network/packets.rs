@@ -48,7 +48,9 @@ pub enum GamePacket {
     Register,
     Inform { player_id: u8 },
     NewPlayer { player_id: u8 },
+    LapComplete { player_id: u8 },
     StatusUpdate(StatusUpdate),
+    Restart,
     DropPlayer { player_id: u8 },
     End { player_id: u8 },
 }
@@ -60,6 +62,8 @@ impl GamePacket {
             Register => vec![0],
             Inform { player_id } => vec![5, *player_id],
             NewPlayer { player_id } => vec![6, *player_id],
+            LapComplete { player_id } => vec![7, *player_id],
+            Restart => vec![8],
             StatusUpdate(s) => s.to_binary_data(),
             DropPlayer { player_id } => vec![4, *player_id],
             End { player_id } => vec![3, *player_id]

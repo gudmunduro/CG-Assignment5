@@ -4,18 +4,28 @@ use glow::Context;
 use nalgebra::Vector3;
 use sdl2::{event::Event, keyboard::Keycode};
 
-use crate::{core::{game_object::GameObject, game::Game}, game_objects::cars::car::ViewState, objects::mesh_model::MeshModel, network::server_connection::NetworkEvent};
+use crate::{
+    core::{game::Game, game_object::GameObject, constants::{FINISH_LINE_X_START, FINISH_LINE_X_STOP, FINISH_LINE_Z}},
+    game_objects::cars::car::ViewState,
+    network::server_connection::NetworkEvent,
+    objects::mesh_model::MeshModel,
+};
 
-use super::{car::Car, super::track::track_segment::TRACK_ELEVATION};
+use super::{super::track::track_segment::TRACK_ELEVATION, car::Car};
 
 const LOOK_DIST: f32 = 0.9;
 
 pub struct PlayerCar<'a> {
-    car: Car<'a>
+    car: Car<'a>,
 }
 
 impl<'a> PlayerCar<'a> {
-    pub fn new(car_model: Rc<MeshModel<'a>>, wheel_model: Rc<MeshModel<'a>>, gl: &'a Context, game: &Game) -> PlayerCar<'a> {
+    pub fn new(
+        car_model: Rc<MeshModel<'a>>,
+        wheel_model: Rc<MeshModel<'a>>,
+        gl: &'a Context,
+        game: &Game,
+    ) -> PlayerCar<'a> {
         let car = Car::new(true, car_model, wheel_model, gl, game);
 
         PlayerCar { car }
@@ -32,13 +42,18 @@ impl<'a> PlayerCar<'a> {
         };
 
         let rt_value = joystick.axis(5).unwrap_or(i16::MIN);
-        self.car.set_throttle(self.i16_range_to_float(rt_value) * 100.0);
+        self.car
+            .set_throttle(self.i16_range_to_float(rt_value) * 100.0);
         let lt_value = joystick.axis(4).unwrap_or(i16::MIN);
-        self.car.set_brake(self.i16_range_to_float(lt_value) * 100.0);
+        self.car
+            .set_brake(self.i16_range_to_float(lt_value) * 100.0);
 
         let left_x_axis = joystick.axis(0).unwrap_or(0);
         // let left_y_axis = joystick.axis(1).unwrap_or(0);
-        self.car.set_steering_angle(-(self.i16_range_to_float(left_x_axis) * 2.0 * (0.25 * f32::consts::PI / 4.0) - (0.25 * f32::consts::PI / 4.0)));
+        self.car.set_steering_angle(
+            -(self.i16_range_to_float(left_x_axis) * 2.0 * (0.25 * f32::consts::PI / 4.0)
+                - (0.25 * f32::consts::PI / 4.0)),
+        );
     }
 
     fn spawn_position(player_id: u8) -> Vector3<f32> {
@@ -58,8 +73,7 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
     fn on_event(&mut self, _game: &Game, event: &Event) {
         match event {
             Event::KeyDown {
-                keycode: Some(key ),
-                ..
+                keycode: Some(key), ..
             } => {
                 use Keycode::*;
                 match key {
@@ -73,23 +87,25 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
                     A => {
                         self.car.set_steering_angle((f32::consts::PI / 4.0) * 0.25);
                     }
-                    D => {
-                        self.car.set_steering_angle((-std::f32::consts::PI / 4.0) * 0.25)
-                    }
+                    D => self
+                        .car
+                        .set_steering_angle((-std::f32::consts::PI / 4.0) * 0.25),
                     Space => {
                         self.car.set_handbrake(true);
                     }
                     V => {
                         let view_state = match self.car.view_state() {
                             ViewState::ThirdPerson => ViewState::FirstPerson,
-                            ViewState::FirstPerson => ViewState::ThirdPerson
+                            ViewState::FirstPerson => ViewState::ThirdPerson,
                         };
                         self.car.set_view_state(view_state);
                     }
-                    _ => ()
+                    _ => (),
                 }
             }
-            Event::KeyUp { keycode: Some(key), .. }  => {
+            Event::KeyUp {
+                keycode: Some(key), ..
+            } => {
                 use Keycode::*;
                 match key {
                     W => {
@@ -116,10 +132,22 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
                 }
             }
             _ => (),
-        }   
+        }
     }
 
     fn update(&mut self, game: &Game, gl: &'a Context) {
+        let current_pos = self.car.position();
+        let future_pos = self
+            .car
+            .car_state()
+            .peek_time_step(game.delta_time, self.car.handbrake(), self.car.handbrake())
+            .position_wc;
+
+        if current_pos.x > FINISH_LINE_X_START && current_pos.x < FINISH_LINE_X_STOP && FINISH_LINE_Z >= current_pos.z && FINISH_LINE_Z <= future_pos.z {
+            log::debug!("Lap!");
+            game.server_connection.send_lap_complete();
+        }
+
         self.handle_joystick_controls(game);
 
         self.car.update(game, gl);
@@ -129,17 +157,24 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
             loop {
                 let mut game_events = game.server_connection.game_events.borrow_mut();
                 let event = game_events.front();
-                
+
                 match event {
                     Some(NetworkEvent::MoveToStartPos) => {
-                        self.car.set_position(PlayerCar::spawn_position(game.server_connection.player_id().unwrap_or(1)));
+                        self.car.reset_physics();
+                        self.car.set_position(PlayerCar::spawn_position(
+                            game.server_connection.player_id().unwrap_or(1),
+                        ));
                         game_events.pop_front();
                     }
-                    _ => break
+                    _ => break,
                 }
             }
 
-            game.server_connection.send_status_update(self.car.position(), self.car.angle(), self.car.steering_angle());
+            game.server_connection.send_status_update(
+                self.car.position(),
+                self.car.angle(),
+                self.car.steering_angle(),
+            );
         }
 
         let mut view_matrix = game.view_matrix.borrow_mut();
@@ -149,9 +184,7 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
         // Update camera pos
         use ViewState::*;
         let eye = match self.car.view_state() {
-            FirstPerson => {
-                self.car.position() + Vector3::new(ang_sin * -1.8, 1.2, ang_cos * -1.8)
-            }
+            FirstPerson => self.car.position() + Vector3::new(ang_sin * -1.8, 1.2, ang_cos * -1.8),
             ThirdPerson => {
                 self.car.position() + Vector3::new(ang_sin * -20.0, 6.0, ang_cos * -20.0)
             }
@@ -163,5 +196,4 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
     fn display(&self, game: &Game, gl: &'a Context) {
         self.car.display(game, gl);
     }
-
 }
