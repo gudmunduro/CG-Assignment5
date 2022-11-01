@@ -1,16 +1,19 @@
-const int LIGHT_COUNT = 1;
+const int MAX_LIGHT_COUNT = 10;
 
 attribute vec3 a_position;
 attribute vec3 a_normal;
 attribute vec2 a_uv;
-uniform vec4 u_light_position[LIGHT_COUNT];
+uniform vec4 u_light_position[MAX_LIGHT_COUNT];
+uniform int u_light_count;
 uniform vec4 u_eye_position;
 
 uniform mat4 u_model_matrix;
 uniform mat4 u_projection_matrix;
 uniform mat4 u_view_matrix;
 
-varying vec4 s[LIGHT_COUNT];
+
+varying vec4 s[MAX_LIGHT_COUNT];
+varying float dist[MAX_LIGHT_COUNT];
 varying vec4 v;
 varying vec4 normal;
 varying vec2 v_uv;
@@ -24,8 +27,9 @@ void main(void)
 	normal = u_model_matrix * normal;
 
 	v = u_eye_position - position;
-	for (int i = 0; i < LIGHT_COUNT; i++) {
+	for (int i = 0; i < u_light_count; i++) {
 		s[i] = u_light_position[i].w == 1.0 ? u_light_position[i] - position : u_light_position[i];
+		dist[i] = length(s[i]);
 	}
 
 	position = u_view_matrix * position;

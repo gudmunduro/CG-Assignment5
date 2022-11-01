@@ -20,10 +20,10 @@ use sdl2::{
 };
 
 use super::{
-    constants::{W_HEIGHT, W_WIDTH, MODEL_LOCATION},
+    constants::{W_HEIGHT, W_WIDTH, MODEL_LOCATION, SUNLIGHT_ID},
     game_object::GameObject,
     matrices,
-    obj_loader::load_obj_file,
+    obj_loader::load_obj_file, lights::Lights, color::Color,
 };
 
 const SHOW_FPS: bool = false;
@@ -48,6 +48,7 @@ pub struct Game<'a> {
     pub frame_time_sum: f32,
     pub car_model: Rc<MeshModel<'a>>,
     pub wheel_model: Rc<MeshModel<'a>>,
+    pub lights: RefCell<Lights>,
 }
 
 impl<'a> Game<'a> {
@@ -98,6 +99,7 @@ impl<'a> Game<'a> {
             // Temporary initialize the car model as empty as game needs to exit before we load it
             car_model: Rc::new(MeshModel::new(gl)),
             wheel_model: Rc::new(MeshModel::new(gl)),
+            lights: RefCell::new(Lights::new()),
         }
     }
 
@@ -110,6 +112,17 @@ impl<'a> Game<'a> {
             load_obj_file(MODEL_LOCATION, "wheel.obj", self.gl, self)
                 .expect("Failed to load wheel model"),
         );
+
+        // Create lights
+        let mut lights = self.lights.borrow_mut();
+        lights.add_light(SUNLIGHT_ID);
+        lights.set_light_position(SUNLIGHT_ID, &Vector3::new(43.0, 80.0, -120.0));
+        lights.set_light_diffuse(SUNLIGHT_ID, &Color::new(0.85, 0.59, 0.15));
+        lights
+            .set_light_ambient(SUNLIGHT_ID, &Color::new(0.85 / 2.0, 0.59 / 2.0, 0.15 / 2.0));
+        lights.set_light_specular(SUNLIGHT_ID, &Color::new(0.85, 0.59, 0.15));
+        lights.set_light_max_radius(SUNLIGHT_ID, 1000.0);
+        drop(lights);
 
         // Create the level
         self.add_game_object(Skybox::new(self.gl, self));
@@ -348,11 +361,7 @@ impl<'a> Game<'a> {
 
         self.model_matrix.get_mut().load_identity();
 
-        self.shader.set_light_position(&[43.0, 80.0, -120.0, 1.0]);
-        self.shader.set_light_diffuse(&[0.85, 0.59, 0.15, 1.0]);
-        self.shader
-            .set_light_ambient(&[0.85 / 2.0, 0.59 / 2.0, 0.15 / 2.0, 1.0]);
-        self.shader.set_light_specular(&[0.85, 0.59, 0.15, 1.0]);
+        self.lights.get_mut().update_lights(&self.shader);
         self.shader
             .set_eye_position(view_matrix.eye.x, view_matrix.eye.y, view_matrix.eye.z);
 

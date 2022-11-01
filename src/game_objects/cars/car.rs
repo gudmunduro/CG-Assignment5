@@ -28,11 +28,11 @@ pub struct Car<'a> {
     handbrake: bool,
     wheel_rotation: f32,
     view_state: ViewState,
-    enable_collision_check: bool
+    enable_plane_collision: bool
 }
 
 impl<'a> Car<'a> {
-    pub fn new(enable_collision_check: bool, car_model: Rc<MeshModel<'a>>, wheel_model: Rc<MeshModel<'a>>, _gl: &'a Context, _game: &Game) -> Car<'a> {
+    pub fn new(enable_plane_collision: bool, car_model: Rc<MeshModel<'a>>, wheel_model: Rc<MeshModel<'a>>, _gl: &'a Context, _game: &Game) -> Car<'a> {
         let mut car_state = CarState::new();
         car_state.position_wc.y = 40.0;
 
@@ -44,7 +44,7 @@ impl<'a> Car<'a> {
             handbrake: false,
             wheel_rotation: 0.0,
             view_state: ViewState::ThirdPerson,
-            enable_collision_check
+            enable_plane_collision
         }
     }
 
@@ -175,6 +175,10 @@ impl<'a> Car<'a> {
                 }
             }
             InfiniteYPlaneCollider(p0, p1) => {
+                if !self.enable_plane_collision {
+                    return;
+                }
+
                 let corners = self.full_car_cube(game, None);
                 let car_state_predicted = self.car_state.peek_time_step(game.delta_time, self.handbrake, self.handbrake);
                 let future_corners = self.full_car_cube(game, Some(&car_state_predicted));
@@ -295,9 +299,7 @@ impl<'a> GameObject<'a> for Car<'a> {
     fn on_event(&mut self, _game: &Game, _event: &Event) {}
 
     fn update(&mut self, game: &Game, _gl: &'a Context) {
-        if self.enable_collision_check {
-            self.check_all_collision(game);
-        }
+        self.check_all_collision(game);
 
         self.car_state
             .perform_physics_time_step(game.delta_time, self.handbrake, self.handbrake);

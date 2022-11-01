@@ -15,6 +15,7 @@ pub struct Shader3D<'a> {
     view_matrix_loc: NativeUniformLocation,
     light_pos_loc: NativeUniformLocation,
     light_dif_loc: NativeUniformLocation,
+    light_max_radius_loc: NativeUniformLocation,
     mat_dif_loc: NativeUniformLocation,
     eye_loc: NativeUniformLocation,
     light_ambient_loc: NativeUniformLocation,
@@ -27,6 +28,7 @@ pub struct Shader3D<'a> {
     diffuse_texture_loc: NativeUniformLocation,
     specular_texture_loc: NativeUniformLocation,
     skybox_mode_loc: NativeUniformLocation,
+    light_count_loc: NativeUniformLocation,
 }
 
 impl<'a> Shader3D<'a> {
@@ -99,6 +101,9 @@ impl<'a> Shader3D<'a> {
             let light_specular_loc = gl
                 .get_uniform_location(rendering_program_id, "u_light_specular")
                 .unwrap();
+            let light_max_radius_loc = gl
+                .get_uniform_location(rendering_program_id, "u_light_max_radius")
+                .unwrap();
             let mat_spec_loc = gl
                 .get_uniform_location(rendering_program_id, "u_material_specular")
                 .unwrap();
@@ -123,6 +128,9 @@ impl<'a> Shader3D<'a> {
             let skybox_mode_loc = gl
                 .get_uniform_location(rendering_program_id, "u_skybox_mode")
                 .unwrap();
+            let light_count_loc = gl
+                .get_uniform_location(rendering_program_id, "u_light_count")
+                .unwrap();
 
             Shader3D {
                 gl,
@@ -135,6 +143,7 @@ impl<'a> Shader3D<'a> {
                 view_matrix_loc,
                 light_pos_loc,
                 light_dif_loc,
+                light_max_radius_loc,
                 mat_dif_loc,
                 eye_loc,
                 light_ambient_loc,
@@ -147,6 +156,7 @@ impl<'a> Shader3D<'a> {
                 diffuse_texture_loc,
                 specular_texture_loc,
                 skybox_mode_loc,
+                light_count_loc,
             }
         }
     }
@@ -267,6 +277,12 @@ impl<'a> Shader3D<'a> {
         }
     }
 
+    pub fn set_light_max_radius(&self, radius: &[f32]) {
+        unsafe {
+            self.gl.uniform_1_f32_slice(Some(&self.light_max_radius_loc), radius);
+        }
+    }
+
     pub fn set_material_diffuse(&self, color: &Color) {
         let Color { r, g, b, a } = color.clone();
 
@@ -329,6 +345,13 @@ impl<'a> Shader3D<'a> {
         unsafe {
             self.gl
                 .uniform_1_u32(Some(&self.skybox_mode_loc), value as u32);
+        }
+    }
+
+    pub fn set_light_count(&self, value: u32) {
+        unsafe {
+            self.gl
+                .uniform_1_i32(Some(&self.light_count_loc), value as i32);
         }
     }
 }

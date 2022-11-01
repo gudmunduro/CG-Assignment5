@@ -5,7 +5,14 @@ use nalgebra::Vector3;
 use sdl2::{event::Event, keyboard::Keycode};
 
 use crate::{
-    core::{game::Game, game_object::GameObject, constants::{FINISH_LINE_X_START, FINISH_LINE_X_STOP, FINISH_LINE_Z}},
+    core::{
+        constants::{
+            FINISH_LINE_X_START, FINISH_LINE_X_STOP, FINISH_LINE_Z, HALF_RING_LINE_Z,
+            HALF_RING_X_START, HALF_RING_X_STOP,
+        },
+        game::Game,
+        game_object::GameObject, color::Color,
+    },
     game_objects::cars::car::ViewState,
     network::server_connection::NetworkEvent,
     objects::mesh_model::MeshModel,
@@ -17,6 +24,7 @@ const LOOK_DIST: f32 = 0.9;
 
 pub struct PlayerCar<'a> {
     car: Car<'a>,
+    lap_half_ring_complete: bool,
 }
 
 impl<'a> PlayerCar<'a> {
@@ -28,7 +36,18 @@ impl<'a> PlayerCar<'a> {
     ) -> PlayerCar<'a> {
         let car = Car::new(true, car_model, wheel_model, gl, game);
 
-        PlayerCar { car }
+        let mut lights = game.lights.borrow_mut();
+        lights.add_light("PLAYER_CAR");
+        lights.set_light_diffuse("PLAYER_CAR", &Color::new(0.0, 1.0, 0.0));
+        //lights
+        //    .set_light_ambient("PLAYER_CAR", &Color::with_alpha(0.0, 0.0, 0.0, 0.0));
+        lights.set_light_specular("PLAYER_CAR", &Color::new(0.0, 1.0, 0.0));
+        lights.set_light_max_radius("PLAYER_CAR", 1.0);
+
+        PlayerCar {
+            car,
+            lap_half_ring_complete: false,
+        }
     }
 
     fn i16_range_to_float(&self, value: i16) -> f32 {
@@ -143,9 +162,25 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
             .peek_time_step(game.delta_time, self.car.handbrake(), self.car.handbrake())
             .position_wc;
 
-        if current_pos.x > FINISH_LINE_X_START && current_pos.x < FINISH_LINE_X_STOP && FINISH_LINE_Z >= current_pos.z && FINISH_LINE_Z <= future_pos.z {
+        if self.lap_half_ring_complete
+            && current_pos.x > FINISH_LINE_X_START
+            && current_pos.x < FINISH_LINE_X_STOP
+            && FINISH_LINE_Z >= current_pos.z
+            && FINISH_LINE_Z <= future_pos.z
+        {
             log::debug!("Lap!");
-            game.server_connection.send_lap_complete();
+            if game.server_connection.is_multiplayer() {
+                game.server_connection.send_lap_complete();
+            }
+            self.lap_half_ring_complete = false;
+        }
+
+        if current_pos.x > HALF_RING_X_START
+            && current_pos.x < HALF_RING_X_STOP
+            && HALF_RING_LINE_Z <= current_pos.z
+            && HALF_RING_LINE_Z >= future_pos.z
+        {
+            self.lap_half_ring_complete = true;
         }
 
         self.handle_joystick_controls(game);
@@ -177,11 +212,15 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
             );
         }
 
+        // Update lights
+        let pos = self.car.position();
+        game.lights.borrow_mut().set_light_position("PLAYER_CAR", &Vector3::new(pos.x, pos.y, pos.z));
+
+        // Update camera pos
         let mut view_matrix = game.view_matrix.borrow_mut();
         let ang_sin = self.car.angle().sin();
         let ang_cos = self.car.angle().cos();
 
-        // Update camera pos
         use ViewState::*;
         let eye = match self.car.view_state() {
             FirstPerson => self.car.position() + Vector3::new(ang_sin * -1.8, 1.2, ang_cos * -1.8),

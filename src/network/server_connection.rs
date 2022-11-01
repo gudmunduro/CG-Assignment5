@@ -36,7 +36,7 @@ impl ServerConnection {
     }
 
     pub fn connect(&mut self, server_address: &str) {
-        let socket = UdpSocket::bind("127.0.0.1:0").expect("Failed to open socket for multiplayer");
+        let socket = UdpSocket::bind("0.0.0.0:0").expect("Failed to open socket for multiplayer");
         socket
             .set_nonblocking(true)
             .expect("Failed to set socket to non-blocking");
