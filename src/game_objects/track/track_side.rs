@@ -308,7 +308,7 @@ impl TrackSide {
             model_matrix.push_stack();
             model_matrix.add_translate(p.x, 0.0, p.z);
             model_matrix.add_rotation(0.0, rot, 0.0);
-            model_matrix.add_scale(1.0, 1.0, v.norm() * 400.0);
+            model_matrix.add_scale(1.0, 1.0, v.norm() * 450.0);
             
             let local_p0 = Vector4::new(-0.5, 0.0, 0.5, 1.0);
             let local_p1 = Vector4::new(-0.5, 0.0, -0.5, 1.0);
@@ -343,7 +343,7 @@ impl TrackSide {
 
             model_matrix.add_translate(p.x, 0.0, p.z);
             model_matrix.add_rotation(0.0, rot, 0.0);
-            model_matrix.add_scale(1.0, 1.0, v.norm() * 400.0);
+            model_matrix.add_scale(1.0, 1.0, v.norm() * 450.0);
 
             let local_p0 = Vector4::new(0.5, 0.0, 0.5, 1.0);
             let local_p1 = Vector4::new(0.5, 0.0, -0.5, 1.0);
@@ -422,7 +422,7 @@ impl TrackSide {
             model_matrix.push_stack();
             model_matrix.add_translate(p.x, 0.0, p.z);
             model_matrix.add_rotation(0.0, rot, 0.0);
-            model_matrix.add_scale(1.0, 1.0, v.norm() * 400.0);
+            model_matrix.add_scale(1.0, 1.0, v.norm() * 450.0);
             
             let p0 = model_matrix.matrix * Vector4::new(-0.5, 0.0, 0.5, 1.0);
             let p1 =  model_matrix.matrix * Vector4::new(-0.5, 0.0, -0.5, 1.0);
@@ -443,7 +443,7 @@ impl TrackSide {
             model_matrix.add_translate(-20.0, 0.0, -20.0);
             model_matrix.add_translate(p.x, 0.0, p.z);
             model_matrix.add_rotation(0.0, rot, 0.0);
-            model_matrix.add_scale(1.0, 1.0, v.norm() * 400.0);
+            model_matrix.add_scale(1.0, 1.0, v.norm() * 450.0);
             
             let p0 = model_matrix.matrix * Vector4::new(0.5, 0.0, 0.5, 1.0);
             let p1 =  model_matrix.matrix * Vector4::new(0.5, 0.0, -0.5, 1.0);

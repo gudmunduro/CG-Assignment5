@@ -180,8 +180,8 @@ impl<'a> Car<'a> {
                 }
 
                 let corners = self.full_car_cube(game, None);
-                let car_state_predicted = self.car_state.peek_time_step(game.delta_time, self.handbrake, self.handbrake);
-                let future_corners = self.full_car_cube(game, Some(&car_state_predicted));
+                let car_future_state = self.car_state.peek_time_step(game.delta_time, self.handbrake, self.handbrake);
+                let future_corners = self.full_car_cube(game, Some(&car_future_state));
 
                 for (corner, f_corner) in corners[..4].iter().zip(&future_corners[..4]) {
                     let v = (p1 - p0).xz();
@@ -194,7 +194,7 @@ impl<'a> Car<'a> {
                     let t_hit = (n.dot(&(b_mat-a_mat))) / (n.dot(&c));
                     let p_hit = a_mat + t_hit * c;
 
-                    if line_contains_point(&p0.xz(), &p1.xz(), &p_hit) && t_hit <= game.delta_time && t_hit > 0.0 {
+                    if line_contains_point(&p0.xz(), &p1.xz(), &p_hit) && t_hit <= game.delta_time && t_hit >= 0.0 {
                         let reflected = c - ((2.0 * (c.dot(&n))) / (n.dot(&n))) * n;
 
                         self.car_state.velocity_wc.x = reflected.x;
