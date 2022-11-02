@@ -22,9 +22,17 @@ use super::{super::track::track_segment::TRACK_ELEVATION, car::Car};
 
 const LOOK_DIST: f32 = 0.9;
 
+enum BrakingState {
+    None,
+    Braking,
+    Reversing,
+}
+
 pub struct PlayerCar<'a> {
     car: Car<'a>,
     lap_half_ring_complete: bool,
+    braking_state: BrakingState,
+    joystic_braking_state: BrakingState,
 }
 
 impl<'a> PlayerCar<'a> {
@@ -47,6 +55,8 @@ impl<'a> PlayerCar<'a> {
         PlayerCar {
             car,
             lap_half_ring_complete: false,
+            braking_state: BrakingState::None,
+            joystic_braking_state: BrakingState::None,
         }
     }
 
@@ -63,9 +73,38 @@ impl<'a> PlayerCar<'a> {
         let rt_value = joystick.axis(5).unwrap_or(i16::MIN);
         self.car
             .set_throttle(self.i16_range_to_float(rt_value) * 100.0);
+
+        // Braking
         let lt_value = joystick.axis(4).unwrap_or(i16::MIN);
-        self.car
-            .set_brake(self.i16_range_to_float(lt_value) * 100.0);
+        let brake_value = self.i16_range_to_float(lt_value) * 100.0;
+        if brake_value > 5.0 {
+            use BrakingState::*;
+            match self.joystic_braking_state {
+                Braking => {
+                    if self.car.car_state().velocity_wc.norm() < 0.3 {
+                        self.joystic_braking_state = Reversing;
+                    }
+
+                    self.car.set_brake(brake_value);
+                }
+                Reversing => {
+                    self.car.set_brake(0.0);
+                    self.car.set_throttle(brake_value * 0.2);
+                    self.car.set_reverse(true);
+                }
+                None => {
+                    self.joystic_braking_state = Braking;
+                }
+            }
+        } else if !matches!(self.joystic_braking_state, BrakingState::None) {
+            if matches!(self.joystic_braking_state, BrakingState::Reversing) {
+                self.car.car_state_mut().velocity_wc = -self.car.car_state().velocity_wc;
+            }
+
+            self.car.set_brake(0.0);
+            self.car.set_reverse(false);
+            self.joystic_braking_state = BrakingState::None;
+        }
 
         let left_x_axis = joystick.axis(0).unwrap_or(0);
         // let left_y_axis = joystick.axis(1).unwrap_or(0);
@@ -100,8 +139,25 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
                         self.car.set_throttle(100.0);
                     }
                     S => {
-                        self.car.set_throttle(0.0);
-                        self.car.set_brake(100.0);
+                        use BrakingState::*;
+                        match self.braking_state {
+                            Braking => {
+                                if self.car.car_state().velocity_wc.norm() < 0.3 {
+                                    self.braking_state = Reversing;
+                                }
+
+                                self.car.set_throttle(0.0);
+                                self.car.set_brake(100.0);
+                            }
+                            Reversing => {
+                                self.car.set_brake(0.0);
+                                self.car.set_throttle(20.0);
+                                self.car.set_reverse(true);
+                            }
+                            None => {
+                                self.braking_state = Braking;
+                            }
+                        }
                     }
                     A => {
                         self.car.set_steering_angle((f32::consts::PI / 4.0) * 0.25);
@@ -131,7 +187,14 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
                         self.car.set_throttle(0.0);
                     }
                     S => {
+                        if matches!(self.braking_state, BrakingState::Reversing) {
+                            self.car.car_state_mut().velocity_wc = -self.car.car_state().velocity_wc;
+                        }
+
+                        self.braking_state = BrakingState::None;
                         self.car.set_brake(0.0);
+                        self.car.set_throttle(0.0);
+                        self.car.set_reverse(false);
                     }
                     A | D => {
                         self.car.set_steering_angle(0.0);
@@ -159,7 +222,7 @@ impl<'a> GameObject<'a> for PlayerCar<'a> {
         let future_pos = self
             .car
             .car_state()
-            .peek_time_step(game.delta_time, self.car.handbrake(), self.car.handbrake())
+            .peek_time_step(game.delta_time, self.car.handbrake(), self.car.handbrake(), self.car.reverse())
             .position_wc;
 
         if self.lap_half_ring_complete

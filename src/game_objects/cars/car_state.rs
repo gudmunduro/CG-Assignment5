@@ -58,6 +58,7 @@ impl CarState {
         delta_time: f32,
         front_slip: bool,
         rear_slip: bool,
+        reverse: bool,
     ) {
         let sin_ang = self.angle.sin();
         let cos_ang = self.angle.cos();
@@ -154,17 +155,23 @@ impl CarState {
         self.velocity_wc.x += delta_time * acceleration_wc.x;
         self.velocity_wc.z += delta_time * acceleration_wc.z;
 
-        self.position_wc.x += delta_time * self.velocity_wc.x;
-        self.position_wc.z += delta_time * self.velocity_wc.z;
+        if reverse {
+            self.position_wc.x -= delta_time * self.velocity_wc.x;
+            self.position_wc.z -= delta_time * self.velocity_wc.z;
+        }
+        else {
+            self.position_wc.x += delta_time * self.velocity_wc.x;
+            self.position_wc.z += delta_time * self.velocity_wc.z;
+        }
 
         // Angular velocity and heading
         self.angular_velocity += delta_time * angular_acceleration;
         self.angle += delta_time * self.angular_velocity;
     }
 
-    pub fn peek_time_step(&self, delta_time: f32, front_slip: bool, rear_slip: bool) -> CarState {
+    pub fn peek_time_step(&self, delta_time: f32, front_slip: bool, rear_slip: bool, reverse: bool) -> CarState {
         let mut future_state = self.clone();
-        future_state.perform_physics_time_step(delta_time, front_slip, rear_slip);
+        future_state.perform_physics_time_step(delta_time, front_slip, rear_slip, reverse);
         future_state
     }
 }

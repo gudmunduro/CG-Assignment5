@@ -28,7 +28,8 @@ pub struct Car<'a> {
     handbrake: bool,
     wheel_rotation: f32,
     view_state: ViewState,
-    enable_plane_collision: bool
+    enable_plane_collision: bool,
+    reverse: bool,
 }
 
 impl<'a> Car<'a> {
@@ -44,7 +45,8 @@ impl<'a> Car<'a> {
             handbrake: false,
             wheel_rotation: 0.0,
             view_state: ViewState::ThirdPerson,
-            enable_plane_collision
+            enable_plane_collision,
+            reverse: false,
         }
     }
 
@@ -180,7 +182,7 @@ impl<'a> Car<'a> {
                 }
 
                 let corners = self.full_car_cube(game, None);
-                let car_future_state = self.car_state.peek_time_step(game.delta_time, self.handbrake, self.handbrake);
+                let car_future_state = self.car_state.peek_time_step(game.delta_time, self.handbrake, self.handbrake, self.reverse);
                 let future_corners = self.full_car_cube(game, Some(&car_future_state));
 
                 for (corner, f_corner) in corners[..4].iter().zip(&future_corners[..4]) {
@@ -290,6 +292,18 @@ impl<'a> Car<'a> {
         &self.car_state
     }
 
+    pub fn car_state_mut(&mut self) -> &mut CarState {
+        &mut self.car_state
+    }
+
+    pub fn reverse(&self) -> bool {
+        self.reverse
+    }
+
+    pub fn set_reverse(&mut self, value: bool) {
+        self.reverse = value;
+    }
+
     pub fn reset_physics(&mut self) {
         self.car_state = CarState::new();
     }
@@ -310,7 +324,7 @@ impl<'a> GameObject<'a> for Car<'a> {
         self.check_all_collision(game);
 
         self.car_state
-            .perform_physics_time_step(game.delta_time, self.handbrake, self.handbrake);
+            .perform_physics_time_step(game.delta_time, self.handbrake, self.handbrake, self.reverse);
 
         self.wheel_rotation += self.car_state.wheel_rotation_speed;
         if self.wheel_rotation >= 2.0 * f32::consts::PI {
